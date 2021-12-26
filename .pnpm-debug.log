@@ -1,0 +1,28 @@
+{
+  "0 debug pnpm:scope": {
+    "selected": 1
+  },
+  "1 debug pnpm:package-manifest": {
+    "initial": {},
+    "prefix": "/Users/thasarito/work/blockchain/evm/forge-test"
+  },
+  "2 debug pnpm:context": {
+    "currentLockfileExists": false,
+    "storeDir": "/Users/thasarito/.pnpm-store/v3",
+    "virtualStoreDir": "/Users/thasarito/work/blockchain/evm/forge-test/node_modules/.pnpm"
+  },
+  "3 debug pnpm:stage": {
+    "prefix": "/Users/thasarito/work/blockchain/evm/forge-test",
+    "stage": "resolution_started"
+  },
+  "4 error pnpm": {
+    "code": "ERR_PNPM_SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER",
+    "pkgsStack": [],
+    "err": {
+      "name": "pnpm",
+      "message": "@openzeppelin isn't supported by any available resolver.",
+      "code": "ERR_PNPM_SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER",
+      "stack": "pnpm: @openzeppelin isn't supported by any available resolver.\n    at Object.resolve (/Users/thasarito/.nvm/versions/node/v16.13.0/pnpm-global/5/node_modules/.pnpm/pnpm@6.23.2/node_modules/pnpm/dist/pnpm.cjs:85393:17)\n    at async run (/Users/thasarito/.nvm/versions/node/v16.13.0/pnpm-global/5/node_modules/.pnpm/pnpm@6.23.2/node_modules/pnpm/dist/pnpm.cjs:71101:23)"
+    }
+  }
+}
