@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-// use ethers::prelude::*;
 use ethers::{
-    core::types::Address,
     middleware::SignerMiddleware,
     prelude::Middleware,
     providers::{Http, Provider},
@@ -10,9 +8,8 @@ use ethers::{
 };
 
 use dotenv::dotenv;
+use forge_test::uniswap::UniswapPair;
 use futures::StreamExt;
-mod bindings;
-use crate::bindings::*;
 
 #[tokio::main]
 async fn main() {
@@ -29,22 +26,19 @@ async fn main() {
 
     let client = SignerMiddleware::new(provider_service.clone(), wallet);
 
-    let address = "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc"
-        .parse::<Address>()
-        .expect("Invalid Address");
-    let pair = i_uniswap_v2_pair::IUniswapV2Pair::new(address, Arc::new(client));
+    let pair = UniswapPair::new(
+        "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc",
+        Arc::new(client),
+    );
 
     let fut = provider_service.watch_blocks();
     let mut stream = fut.await.unwrap().take(5);
     while let Some(block) = stream.next().await {
+        let reserves = pair.updateReserve().await;
         dbg!(block);
         let blocknumber = provider_service.get_block_number();
         let number = blocknumber.await.unwrap();
         dbg!(number);
+        dbg!(reserves.expect("cant get reserve"));
     }
-
-    let token0 = pair.token_0();
-    let token0 = token0.call();
-    let token0 = token0.await.unwrap();
-    println!("token0: {:?}", token0);
 }

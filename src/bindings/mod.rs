@@ -2,6 +2,7 @@
 pub mod context;
 pub mod ds_test;
 pub mod erc20;
+pub mod i_uniswap_v2_factory;
 pub mod i_uniswap_v2_pair;
 pub mod ierc20;
 pub mod ierc20_metadata;
