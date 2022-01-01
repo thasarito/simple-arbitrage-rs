@@ -9,7 +9,10 @@ use ethers::{
 };
 
 use dotenv::dotenv;
-use forge_test::{bindings::i_uniswap_v2_factory::IUniswapV2Factory, uniswap_pair::UniswapPair};
+use forge_test::{
+    bindings::i_uniswap_v2_factory::IUniswapV2Factory, uniswap_pair::UniswapPair,
+    uniswap_pairs::UniswapPairs,
+};
 use futures::{future, StreamExt};
 
 #[tokio::main]
@@ -33,6 +36,11 @@ async fn main() {
 
     let factory = IUniswapV2Factory::new(factory_address, client.clone());
 
+    let pairs = UniswapPairs::new(
+        "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+        "0x5EF1009b9FCD4fec3094a5564047e190D72Bd511",
+        client.clone(),
+    );
     let pair = UniswapPair::new("0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc", client.clone());
 
     let fut = provider_service.watch_blocks();
@@ -42,6 +50,8 @@ async fn main() {
         dbg!(all_pairs);
         let reserves = pair.update_reserve().await.unwrap();
         dbg!(block);
+        let allpairs = pairs.update_reserve().await.unwrap();
+        dbg!(allpairs);
         let blocknumber = provider_service.get_block_number();
         let number = blocknumber.await.unwrap();
         dbg!(number);
