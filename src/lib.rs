@@ -1,2 +1,2 @@
 pub mod bindings;
-pub mod uniswap;
+pub mod uniswap_pair;

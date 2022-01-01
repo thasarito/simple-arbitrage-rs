@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use ethers::{
+    abi::Address,
     middleware::SignerMiddleware,
     prelude::Middleware,
     providers::{Http, Provider},
@@ -8,8 +9,8 @@ use ethers::{
 };
 
 use dotenv::dotenv;
-use forge_test::uniswap::UniswapPair;
-use futures::StreamExt;
+use forge_test::{bindings::i_uniswap_v2_factory::IUniswapV2Factory, uniswap_pair::UniswapPair};
+use futures::{future, StreamExt};
 
 #[tokio::main]
 async fn main() {
@@ -24,21 +25,26 @@ async fn main() {
 
     let provider_service = Provider::<Http>::try_from(url).expect("failed");
 
-    let client = SignerMiddleware::new(provider_service.clone(), wallet);
+    let client = Arc::new(SignerMiddleware::new(provider_service.clone(), wallet));
 
-    let pair = UniswapPair::new(
-        "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc",
-        Arc::new(client),
-    );
+    let factory_address = "0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f"
+        .parse::<Address>()
+        .expect("parse factory address failed");
+
+    let factory = IUniswapV2Factory::new(factory_address, client.clone());
+
+    let pair = UniswapPair::new("0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc", client.clone());
 
     let fut = provider_service.watch_blocks();
-    let mut stream = fut.await.unwrap().take(5);
+    let mut stream = fut.await.unwrap().take_while(|_| future::ready(true));
     while let Some(block) = stream.next().await {
-        let reserves = pair.updateReserve().await;
+        let all_pairs = factory.all_pairs_length().call().await.unwrap();
+        dbg!(all_pairs);
+        let reserves = pair.update_reserve().await.unwrap();
         dbg!(block);
         let blocknumber = provider_service.get_block_number();
         let number = blocknumber.await.unwrap();
         dbg!(number);
-        dbg!(reserves.expect("cant get reserve"));
+        dbg!(reserves);
     }
 }

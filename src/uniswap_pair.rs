@@ -17,7 +17,9 @@ where
         Self { contract }
     }
 
-    pub async fn updateReserve(&self) -> Result<(u128, u128, u32), ContractError<M>> {
+    pub async fn debug(&self) {}
+
+    pub async fn update_reserve(&self) -> Result<(u128, u128, u32), ContractError<M>> {
         let reserves = self.contract.get_reserves().call().await;
         reserves
     }
