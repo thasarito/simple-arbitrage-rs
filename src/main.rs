@@ -1,19 +1,22 @@
+use std::sync::Arc;
+
+// use ethers::prelude::*;
 use ethers::{
-    providers::{Http, Provider},
-    signers::{LocalWallet},
+    core::types::Address,
     middleware::SignerMiddleware,
-    core::types::{Address}
+    prelude::Middleware,
+    providers::{Http, Provider},
+    signers::LocalWallet,
 };
 
 use dotenv::dotenv;
+use futures::StreamExt;
 mod bindings;
 use crate::bindings::*;
 
-use std::{sync::Arc};
-
 #[tokio::main]
 async fn main() {
-		println!("hello");
+    println!("hello");
     dotenv().ok();
 
     let pk = dotenv::var("PRIVATE_KEY").unwrap();
@@ -21,15 +24,24 @@ async fn main() {
     // println!("{}", pk);
     let provider_id = dotenv::var("PROVIDER_ID").unwrap();
     let url = format!("https://mainnet.infura.io/v3/{}", provider_id);
-    
 
     let provider_service = Provider::<Http>::try_from(url).expect("failed");
 
-    let provider = Arc::new(SignerMiddleware::new(provider_service, wallet));
+    let client = SignerMiddleware::new(provider_service.clone(), wallet);
 
-    
-    let address = "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc".parse::<Address>().expect("Invalid Address");
-    let pair = i_uniswap_v2_pair::IUniswapV2Pair::new(address, provider);
+    let address = "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc"
+        .parse::<Address>()
+        .expect("Invalid Address");
+    let pair = i_uniswap_v2_pair::IUniswapV2Pair::new(address, Arc::new(client));
+
+    let fut = provider_service.watch_blocks();
+    let mut stream = fut.await.unwrap().take(5);
+    while let Some(block) = stream.next().await {
+        dbg!(block);
+        let blocknumber = provider_service.get_block_number();
+        let number = blocknumber.await.unwrap();
+        dbg!(number);
+    }
 
     let token0 = pair.token_0();
     let token0 = token0.call();
