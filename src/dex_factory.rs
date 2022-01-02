@@ -5,7 +5,7 @@ use crate::bindings::{
 };
 use ethers::prelude::*;
 
-pub fn get_markets_by_token<'a, M, T>(
+pub fn get_markets_by_token<'a, M>(
     factory_addresses: Vec<Address>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     client: Arc<M>,
@@ -13,7 +13,6 @@ pub fn get_markets_by_token<'a, M, T>(
 where
     M: Middleware,
 {
-    // let flash_query_contract = FlashBotsUniswapQuery::new(flash_query_address, client.clone());
     let markets: Vec<DexMarket<'a, M>> = factory_addresses
         .into_iter()
         .map(|address| DexMarket::new(address, flash_query_contract, client.clone()))

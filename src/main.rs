@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{ops::Add, sync::Arc};
 
 use ethers::{
     abi::Address,
@@ -10,7 +10,10 @@ use ethers::{
 
 use dotenv::dotenv;
 use forge_test::{
-    addresses::*, bindings::i_uniswap_v2_factory::IUniswapV2Factory, dex_factory::DexMarket,
+    addresses::*,
+    // bindings::i_uniswap_v2_factory::IUniswapV2Factory,
+    bindings::flash_bots_uniswap_query::FlashBotsUniswapQuery,
+    dex_factory::get_markets_by_token,
     uniswap_pair::UniswapPair,
 };
 use futures::{future, StreamExt};
@@ -30,30 +33,41 @@ async fn main() {
 
     let client = Arc::new(SignerMiddleware::new(provider_service.clone(), wallet));
 
-    let factory_address = SUSHISWAP_FACTORY_ADDRESS
-        .parse::<Address>()
-        .expect("parse factory address failed");
+    let factory_addresses = vec![
+        SUSHISWAP_FACTORY_ADDRESS,
+        UNISWAP_FACTORY_ADDRESS,
+        ZEUS_FACTORY_ADDRESS,
+        LUA_FACTORY_ADDRESS,
+        CRO_FACTORY_ADDRESS,
+    ]
+    .into_iter()
+    .map(|address| {
+        address
+            .parse::<Address>()
+            .expect("parse factory address failed")
+    })
+    .collect::<Vec<Address>>();
 
-    let factory = IUniswapV2Factory::new(factory_address, client.clone());
-
-    let market = DexMarket::new(
-        "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-        "0x5EF1009b9FCD4fec3094a5564047e190D72Bd511",
-        client.clone(),
-    );
-    let allpairs = market.get_markets().await.unwrap();
+    let flash_query_address = LOOKUP_CONTRACT_ADDRESS.parse::<Address>().unwrap();
+    let flash_query_contract = FlashBotsUniswapQuery::new(flash_query_address, client.clone());
+    let markets = get_markets_by_token(factory_addresses, &flash_query_contract, client.clone());
+    // dbg!(markets);
+    // let market = DexMarket::new(
+    //     "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    //     "0x5EF1009b9FCD4fec3094a5564047e190D72Bd511",
+    //     client.clone(),
+    // );
+    // let allpairs = market.get_markets().await.unwrap();
+    // let all_pairs = factory.all_pairs_length().call().await.unwrap();
+    // dbg!(all_pairs);
 
     let pair = UniswapPair::new("0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc", client.clone());
 
     let fut = provider_service.watch_blocks();
     let mut stream = fut.await.unwrap().take_while(|_| future::ready(true));
     while let Some(block) = stream.next().await {
-        let all_pairs = factory.all_pairs_length().call().await.unwrap();
-        dbg!(all_pairs);
         let reserves = pair.update_reserve().await.unwrap();
         dbg!(block);
-        dbg!(&allpairs);
-        dbg!(allpairs.len());
         let blocknumber = provider_service.get_block_number();
         let number = blocknumber.await.unwrap();
         dbg!(number);
