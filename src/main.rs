@@ -10,7 +10,7 @@ use ethers::{
 
 use dotenv::dotenv;
 use forge_test::{
-    bindings::i_uniswap_v2_factory::IUniswapV2Factory, dex_factory::DexMarket,
+    addresses::*, bindings::i_uniswap_v2_factory::IUniswapV2Factory, dex_factory::DexMarket,
     uniswap_pair::UniswapPair,
 };
 use futures::{future, StreamExt};
@@ -30,7 +30,7 @@ async fn main() {
 
     let client = Arc::new(SignerMiddleware::new(provider_service.clone(), wallet));
 
-    let factory_address = "0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f"
+    let factory_address = SUSHISWAP_FACTORY_ADDRESS
         .parse::<Address>()
         .expect("parse factory address failed");
 
