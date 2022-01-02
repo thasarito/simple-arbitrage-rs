@@ -5,12 +5,12 @@ use crate::bindings::{
 };
 use ethers::prelude::*;
 
-pub struct UniswapPairs<M> {
+pub struct DexMarket<M> {
     contract: IUniswapV2Factory<M>,
     flash_query_contract: FlashBotsUniswapQuery<M>,
 }
 
-impl<M> UniswapPairs<M>
+impl<M> DexMarket<M>
 where
     M: Middleware,
 {
@@ -29,7 +29,7 @@ where
 
     pub async fn debug(&self) {}
 
-    pub async fn update_reserve(&self) -> Result<Vec<[H160; 3]>, ContractError<M>> {
+    pub async fn get_markets(&self) -> Result<Vec<[H160; 3]>, ContractError<M>> {
         let start = U256::from_dec_str("0").unwrap();
         let stop = U256::from_dec_str("1000").unwrap();
 
