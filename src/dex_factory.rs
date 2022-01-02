@@ -1,11 +1,15 @@
+use itertools::Itertools;
 use std::sync::Arc;
 
-use crate::bindings::{
-    flash_bots_uniswap_query::FlashBotsUniswapQuery, i_uniswap_v2_factory::IUniswapV2Factory,
+use crate::{
+    addresses::WETH_ADDRESS,
+    bindings::{
+        flash_bots_uniswap_query::FlashBotsUniswapQuery, i_uniswap_v2_factory::IUniswapV2Factory,
+    },
 };
 use ethers::prelude::*;
 
-pub fn get_markets_by_token<'a, M>(
+pub async fn get_markets_by_token<'a, M>(
     factory_addresses: Vec<Address>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     client: Arc<M>,
@@ -17,6 +21,32 @@ where
         .into_iter()
         .map(|address| DexMarket::new(address, flash_query_contract, client.clone()))
         .collect();
+
+    let mut pairs: Vec<([H160; 3], [H160; 3], [H160; 3])> = vec![];
+    for market in &markets {
+        let market_pair = &market.get_markets().await.unwrap();
+        let token0 = market_pair[0];
+        let token1 = market_pair[1];
+        let pair_address = market_pair[2];
+        pairs.push((token0, token1, pair_address));
+    }
+
+    for (key, vals) in &pairs.into_iter().group_by(|pair| {
+        if *pair.0[0].to_string() == *WETH_ADDRESS {
+            pair.0[0].to_string()
+        } else {
+            pair.0[1].to_string()
+        }
+    }) {
+        dbg!(key);
+        dbg!(vals.count());
+        println!("------------------------------");
+    }
+
+    // markets.into_iter().group_by(|market| {
+    //     let market_pair = &market.get_markets().await.unwrap();
+    // });
+
     markets
 }
 
@@ -25,6 +55,8 @@ pub struct DexMarket<'a, M> {
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
 }
 
+// This should hold Factory of each Dex
+// and have a method to query pairs
 impl<'a, M> DexMarket<'a, M>
 where
     M: Middleware,
