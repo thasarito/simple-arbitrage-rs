@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::{str::from_utf8, sync::Arc};
+use std::sync::Arc;
 
 use crate::{
     addresses::WETH_ADDRESS,
@@ -60,21 +60,38 @@ where
             };
             non_weth1.cmp(&non_weth0)
         })
-        .collect::<Vec<[H160; 3]>>();
-    for (key, vals) in &pairs.into_iter().group_by(|pair| {
-        if pair[0].eq(weth_address) {
-            pair[1]
-        } else {
-            pair[0]
-        }
-    }) {
-        let count = vals.count();
-        if count > (2 as usize) {
-            dbg!(key);
-            dbg!(count);
-            println!("------------------------------");
-        }
-    }
+        .group_by(|pair| {
+            if pair[0].eq(weth_address) {
+                pair[1]
+            } else {
+                pair[0]
+            }
+        })
+        .into_iter()
+        .map(|(key, group)| {
+            let pairs = group
+                .map(|[_, _, pair_address]| pair_address)
+                .collect::<Vec<H160>>();
+            (key, pairs)
+        })
+        .filter(|(_, pairs)| pairs.len() > (1 as usize))
+        .collect::<Vec<(H160, Vec<H160>)>>();
+
+    dbg!(pairs);
+    // for (key, vals) in &pairs.into_iter().group_by(|pair| {
+    //     if pair[0].eq(weth_address) {
+    //         pair[1]
+    //     } else {
+    //         pair[0]
+    //     }
+    // }) {
+    //     let count = vals.count();
+    //     if count > (2 as usize) {
+    //         dbg!(key);
+    //         dbg!(count);
+    //         println!("------------------------------");
+    //     }
+    // }
     ()
     // todo!()
 }
