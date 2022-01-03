@@ -6,7 +6,6 @@ use crate::{
     bindings::{
         flash_bots_uniswap_query::FlashBotsUniswapQuery, i_uniswap_v2_factory::IUniswapV2Factory,
     },
-    uniswap_pair::UniswapPair,
 };
 use ethers::prelude::*;
 
@@ -14,8 +13,7 @@ pub async fn get_markets_by_token<'a, M>(
     factory_addresses: Vec<Address>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     client: Arc<M>,
-)
-// -> Vec<DexMarket<'a, M>>
+) -> Vec<(H160, Vec<H160>)>
 where
     M: Middleware,
 {
@@ -41,7 +39,7 @@ where
         }
     }
 
-    let pairs: Vec<(H160, Vec<(H160, UniswapPair<M>)>)> = pairs
+    let grouped_pairs: Vec<(H160, Vec<H160>)> = pairs
         .into_iter()
         .filter(|pair| {
             // println!("pair[0]: {}", pair[0]);
@@ -71,45 +69,14 @@ where
         .into_iter()
         .map(|(key, group)| {
             let pairs = group
-                .map(|[_, _, pair_address]| {
-                    (pair_address, UniswapPair::new(pair_address, client.clone()))
-                })
-                .collect::<Vec<(H160, UniswapPair<M>)>>();
+                .map(|[_, _, pair_address]| pair_address)
+                .collect::<Vec<H160>>();
             (key, pairs)
         })
         .filter(|(_, pairs)| pairs.len() > (1 as usize))
-        .collect::<Vec<(H160, Vec<(H160, UniswapPair<M>)>)>>();
+        .collect::<Vec<(H160, Vec<H160>)>>();
 
-    let pair_addresses: &Vec<H160> = &pairs
-        .into_iter()
-        .flat_map(|(_, pair_addresses)| pair_addresses)
-        .map(|pair| pair.0)
-        .collect::<Vec<H160>>();
-
-    let reserves = flash_query_contract
-        .get_reserves_by_pairs(pair_addresses.to_vec())
-        .call()
-        .await
-        .expect("getReservesByPairError: reserve query from flash swap contract failed");
-
-    dbg!(pair_addresses);
-    dbg!(reserves);
-    // for (key, vals) in &pairs.into_iter().group_by(|pair| {
-    //     if pair[0].eq(weth_address) {
-    //         pair[1]
-    //     } else {
-    //         pair[0]
-    //     }
-    // }) {
-    //     let count = vals.count();
-    //     if count > (2 as usize) {
-    //         dbg!(key);
-    //         dbg!(count);
-    //         println!("------------------------------");
-    //     }
-    // }
-    ()
-    // todo!()
+    grouped_pairs
 }
 
 pub struct DexFactory<'a, M> {
