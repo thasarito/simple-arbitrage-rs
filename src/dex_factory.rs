@@ -86,7 +86,14 @@ where
         .map(|pair| pair.0)
         .collect::<Vec<H160>>();
 
+    let reserves = flash_query_contract
+        .get_reserves_by_pairs(pair_addresses.to_vec())
+        .call()
+        .await
+        .expect("getReservesByPairError: reserve query from flash swap contract failed");
+
     dbg!(pair_addresses);
+    dbg!(reserves);
     // for (key, vals) in &pairs.into_iter().group_by(|pair| {
     //     if pair[0].eq(weth_address) {
     //         pair[1]
