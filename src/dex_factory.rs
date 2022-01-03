@@ -6,6 +6,7 @@ use crate::{
     bindings::{
         flash_bots_uniswap_query::FlashBotsUniswapQuery, i_uniswap_v2_factory::IUniswapV2Factory,
     },
+    uniswap_pair::UniswapPair,
 };
 use ethers::prelude::*;
 
@@ -40,7 +41,7 @@ where
         }
     }
 
-    let pairs = pairs
+    let pairs: Vec<(H160, Vec<(H160, UniswapPair<M>)>)> = pairs
         .into_iter()
         .filter(|pair| {
             // println!("pair[0]: {}", pair[0]);
@@ -70,14 +71,22 @@ where
         .into_iter()
         .map(|(key, group)| {
             let pairs = group
-                .map(|[_, _, pair_address]| pair_address)
-                .collect::<Vec<H160>>();
+                .map(|[_, _, pair_address]| {
+                    (pair_address, UniswapPair::new(pair_address, client.clone()))
+                })
+                .collect::<Vec<(H160, UniswapPair<M>)>>();
             (key, pairs)
         })
         .filter(|(_, pairs)| pairs.len() > (1 as usize))
-        .collect::<Vec<(H160, Vec<H160>)>>();
+        .collect::<Vec<(H160, Vec<(H160, UniswapPair<M>)>)>>();
 
-    dbg!(pairs);
+    let pair_addresses: &Vec<H160> = &pairs
+        .into_iter()
+        .flat_map(|(_, pair_addresses)| pair_addresses)
+        .map(|pair| pair.0)
+        .collect::<Vec<H160>>();
+
+    dbg!(pair_addresses);
     // for (key, vals) in &pairs.into_iter().group_by(|pair| {
     //     if pair[0].eq(weth_address) {
     //         pair[1]
