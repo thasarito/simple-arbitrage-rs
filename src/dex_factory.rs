@@ -19,16 +19,16 @@ pub async fn get_markets_by_token<'a, M>(
 where
     M: Middleware,
 {
-    let markets: Vec<DexMarket<'a, M>> = factory_addresses
+    let factories: Vec<DexFactory<'a, M>> = factory_addresses
         .into_iter()
-        .map(|address| DexMarket::new(address, flash_query_contract, client.clone()))
+        .map(|address| DexFactory::new(address, flash_query_contract, client.clone()))
         .collect();
 
     let weth_address = &WETH_ADDRESS.parse::<Address>().unwrap();
 
     let mut pairs: Vec<[H160; 3]> = vec![];
-    for market in markets {
-        let market_pairs = market
+    for factory in factories {
+        let market_pairs = factory
             .get_markets()
             .await
             .unwrap()
@@ -112,14 +112,14 @@ where
     // todo!()
 }
 
-pub struct DexMarket<'a, M> {
+pub struct DexFactory<'a, M> {
     factory_contract: IUniswapV2Factory<M>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
 }
 
 // This should hold Factory of each Dex
 // and have a method to query pairs
-impl<'a, M> DexMarket<'a, M>
+impl<'a, M> DexFactory<'a, M>
 where
     M: Middleware,
 {

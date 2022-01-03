@@ -52,26 +52,8 @@ async fn main() {
     let flash_query_contract = FlashBotsUniswapQuery::new(flash_query_address, client.clone());
     let markets =
         get_markets_by_token(factory_addresses, &flash_query_contract, client.clone()).await;
-    // dbg!(markets);
-    // let market = DexMarket::new(
-    //     "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    //     "0x5EF1009b9FCD4fec3094a5564047e190D72Bd511",
-    //     client.clone(),
-    // );
-    // let allpairs = market.get_markets().await.unwrap();
-    // let all_pairs = factory.all_pairs_length().call().await.unwrap();
-    // dbg!(all_pairs);
 
-    // let pair = UniswapPair::new("0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc", client.clone());
-
-    // let fut = provider_service.watch_blocks();
-    // let mut stream = fut.await.unwrap().take_while(|_| future::ready(true));
-    // while let Some(block) = stream.next().await {
-    //     let reserves = pair.update_reserve().await.unwrap();
-    //     dbg!(block);
-    //     let blocknumber = provider_service.get_block_number();
-    //     let number = blocknumber.await.unwrap();
-    //     dbg!(number);
-    //     dbg!(reserves);
-    // }
+    let fut = provider_service.watch_blocks();
+    let mut stream = fut.await.unwrap().take_while(|_| future::ready(true));
+    while let Some(block) = stream.next().await {}
 }
