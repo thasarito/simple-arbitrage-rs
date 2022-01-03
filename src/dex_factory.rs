@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::sync::Arc;
+use std::{str::from_utf8, sync::Arc};
 
 use crate::{
     addresses::WETH_ADDRESS,
@@ -13,7 +13,8 @@ pub async fn get_markets_by_token<'a, M>(
     factory_addresses: Vec<Address>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     client: Arc<M>,
-) -> Vec<DexMarket<'a, M>>
+)
+// -> Vec<DexMarket<'a, M>>
 where
     M: Middleware,
 {
@@ -22,32 +23,60 @@ where
         .map(|address| DexMarket::new(address, flash_query_contract, client.clone()))
         .collect();
 
-    let mut pairs: Vec<([H160; 3], [H160; 3], [H160; 3])> = vec![];
-    for market in &markets {
-        let market_pair = &market.get_markets().await.unwrap();
-        let token0 = market_pair[0];
-        let token1 = market_pair[1];
-        let pair_address = market_pair[2];
-        pairs.push((token0, token1, pair_address));
+    let weth_address = &WETH_ADDRESS.parse::<Address>().unwrap();
+
+    let mut pairs: Vec<[H160; 3]> = vec![];
+    for market in markets {
+        let market_pairs = market
+            .get_markets()
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|pair| pair)
+            .collect::<Vec<[H160; 3]>>();
+
+        for pair in market_pairs {
+            pairs.push(pair.to_owned());
+        }
     }
 
+    let pairs = pairs
+        .into_iter()
+        .filter(|pair| {
+            // println!("pair[0]: {}", pair[0]);
+            let is_include_weth = pair[0].eq(weth_address) || pair[1].eq(weth_address);
+            is_include_weth
+        })
+        .sorted_by(|pair0, pair1| {
+            let non_weth0 = if pair0[0].eq(weth_address) {
+                pair0[1]
+            } else {
+                pair0[0]
+            };
+            let non_weth1 = if pair1[0].eq(weth_address) {
+                pair1[1]
+            } else {
+                pair1[0]
+            };
+            non_weth1.cmp(&non_weth0)
+        })
+        .collect::<Vec<[H160; 3]>>();
     for (key, vals) in &pairs.into_iter().group_by(|pair| {
-        if *pair.0[0].to_string() == *WETH_ADDRESS {
-            pair.0[0].to_string()
+        if pair[0].eq(weth_address) {
+            pair[1]
         } else {
-            pair.0[1].to_string()
+            pair[0]
         }
     }) {
-        dbg!(key);
-        dbg!(vals.count());
-        println!("------------------------------");
+        let count = vals.count();
+        if count > (2 as usize) {
+            dbg!(key);
+            dbg!(count);
+            println!("------------------------------");
+        }
     }
-
-    // markets.into_iter().group_by(|market| {
-    //     let market_pair = &market.get_markets().await.unwrap();
-    // });
-
-    markets
+    ()
+    // todo!()
 }
 
 pub struct DexMarket<'a, M> {
