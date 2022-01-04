@@ -28,9 +28,7 @@ where
                     .into_iter()
                     .map(|address| Pair {
                         address,
-                        reserve0: None,
-                        reserve1: None,
-                        blockTimestampLast: None,
+                        reserve: None,
                     })
                     .collect::<Vec<Pair>>(),
             })
@@ -57,10 +55,14 @@ where
             .await
             .unwrap();
 
-        for (reserve, pair) in std::iter::zip(&reserves, self.get_all_pair_addresses()) {
-            pair.reserve0 = Some(reserve[0]);
-            pair.reserve1 = Some(reserve[1]);
-            pair.blockTimestampLast = Some(reserve[2]);
+        for (new_reserve, pair) in std::iter::zip(&reserves, self.get_all_pair_addresses()) {
+            let updated_reserve = Reserve {
+                reserve0: new_reserve[0],
+                reserve1: new_reserve[1],
+                block_timestamp_last: new_reserve[2],
+            };
+
+            pair.reserve = Some(updated_reserve);
         }
         dbg!(self);
 
@@ -74,6 +76,8 @@ where
             .flat_map(|token_market| &mut token_market.pairs)
             .collect::<Vec<&mut Pair>>()
     }
+
+    pub fn find_arbitrage_opportunities(&self) {}
 }
 
 #[derive(Debug)]
@@ -82,12 +86,17 @@ pub struct TokenMarket<'a> {
     pairs: Vec<Pair>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Pair {
     address: H160,
-    reserve0: Option<U256>,
-    reserve1: Option<U256>,
-    blockTimestampLast: Option<U256>,
+    reserve: Option<Reserve>,
+}
+
+#[derive(Debug)]
+pub struct Reserve {
+    reserve0: U256,
+    reserve1: U256,
+    block_timestamp_last: U256,
 }
 
 #[cfg(test)]
