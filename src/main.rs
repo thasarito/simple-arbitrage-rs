@@ -53,25 +53,11 @@ async fn main() {
     let grouped_pairs =
         get_markets_by_token(factory_addresses, &flash_query_contract, client.clone()).await;
 
-    let crossed_pair = CrossedPairManager::new(&grouped_pairs, &flash_query_contract);
+    let mut crossed_pair = CrossedPairManager::new(&grouped_pairs, &flash_query_contract);
 
     let fut = provider_service.watch_blocks();
     let mut stream = fut.await.unwrap().take_while(|_| future::ready(true));
     while let Some(block) = stream.next().await {
-        // let pair_addresses: &Vec<H160> = &grouped_pairs
-        //     .iter()
-        //     .flat_map(|(_, pair_addresses)| pair_addresses.clone())
-        //     .map(|pair| pair)
-        //     .collect::<Vec<H160>>();
-
-        // let reserves = flash_query_contract
-        //     .get_reserves_by_pairs((*pair_addresses).to_vec())
-        //     .call()
-        //     .await
-        //     .expect("getReservesByPairError: reserve query from flash swap contract failed");
-
-        // dbg!(pair_addresses);
-        // dbg!(reserves);
         crossed_pair.update_reserve().await;
     }
 }

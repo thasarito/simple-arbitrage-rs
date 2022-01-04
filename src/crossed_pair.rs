@@ -26,7 +26,12 @@ where
                 pairs: pairs
                     .to_vec()
                     .into_iter()
-                    .map(|address| Pair { address })
+                    .map(|address| Pair {
+                        address,
+                        reserve0: None,
+                        reserve1: None,
+                        blockTimestampLast: None,
+                    })
                     .collect::<Vec<Pair>>(),
             })
             .collect::<Vec<TokenMarket>>();
@@ -36,12 +41,12 @@ where
         }
     }
 
-    pub async fn update_reserve(&self) {
+    pub async fn update_reserve(&mut self) {
         // let reserves = self.contract.get_reserves().call().await;
         // reserves
         let reserves = self
-            .flatten()
-            .into_iter()
+            .get_all_pair_addresses()
+            .iter()
             .map(|pair| pair.address)
             .collect::<Vec<H160>>();
 
@@ -52,17 +57,22 @@ where
             .await
             .unwrap();
 
-        &self.markets.into_iter().flatten();
+        for (reserve, pair) in std::iter::zip(&reserves, self.get_all_pair_addresses()) {
+            pair.reserve0 = Some(reserve[0]);
+            pair.reserve1 = Some(reserve[1]);
+            pair.blockTimestampLast = Some(reserve[2]);
+        }
+        dbg!(self);
 
-        dbg!(reserves);
-        ()
+        // self.markets.
+        // ()
     }
 
-    fn flatten(&self) -> Vec<Pair> {
+    fn get_all_pair_addresses(&mut self) -> Vec<&mut Pair> {
         self.markets
-            .iter()
-            .flat_map(|token_market| token_market.pairs.to_vec())
-            .collect::<Vec<Pair>>()
+            .iter_mut()
+            .flat_map(|token_market| &mut token_market.pairs)
+            .collect::<Vec<&mut Pair>>()
     }
 }
 
@@ -72,37 +82,12 @@ pub struct TokenMarket<'a> {
     pairs: Vec<Pair>,
 }
 
-impl<'a> IntoIterator for TokenMarket<'a> {
-    type Item = &'a Pair;
-    type IntoIter = TokenMarketIterator<'a>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        TokenMarketIterator {
-            market: self,
-            outer: Some(&self.pairs[0]),
-            inner: 0,
-        }
-    }
-}
-
-struct TokenMarketIterator<'a> {
-    market: TokenMarket<'a>,
-    outer: Option<&'a Pair>,
-    inner: usize,
-}
-
-impl<'a> Iterator for TokenMarketIterator<'a> {
-    type Item = &'a Pair;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let result = self.market.pairs.get(self.inner);
-        result
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Pair {
     address: H160,
+    reserve0: Option<U256>,
+    reserve1: Option<U256>,
+    blockTimestampLast: Option<U256>,
 }
 
 #[cfg(test)]
