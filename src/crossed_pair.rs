@@ -6,7 +6,6 @@ pub struct CrossedPairManager<'a, M>
 where
     M: Middleware,
 {
-    // contract: IUniswapV2Pair<M>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     markets: Vec<TokenMarket<'a>>,
 }
@@ -40,8 +39,6 @@ where
     }
 
     pub async fn update_reserve(&mut self) {
-        // let reserves = self.contract.get_reserves().call().await;
-        // reserves
         let reserves = self
             .get_all_pair_addresses()
             .iter()
@@ -64,10 +61,6 @@ where
 
             pair.reserve = Some(updated_reserve);
         }
-        dbg!(self);
-
-        // self.markets.
-        // ()
     }
 
     fn get_all_pair_addresses(&mut self) -> Vec<&mut Pair> {
@@ -77,13 +70,32 @@ where
             .collect::<Vec<&mut Pair>>()
     }
 
-    pub fn find_arbitrage_opportunities(&self) {}
+    pub fn find_arbitrage_opportunities(&self) {
+        for market in &self.markets {
+            market.find_arbitrage_opportunity();
+        }
+        ()
+    }
 }
 
 #[derive(Debug)]
 pub struct TokenMarket<'a> {
     token: &'a H160,
     pairs: Vec<Pair>,
+}
+
+impl<'a> TokenMarket<'a> {
+    pub fn find_arbitrage_opportunity(&self) {
+        for pair in &self.pairs {
+            let price = pair
+                .reserve
+                .as_ref()
+                .unwrap()
+                .get_updated_price(U256::from_dec_str("100").unwrap());
+            dbg!(pair.address);
+            dbg!(price);
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -97,6 +109,14 @@ pub struct Reserve {
     reserve0: U256,
     reserve1: U256,
     block_timestamp_last: U256,
+}
+
+impl Reserve {
+    pub fn get_updated_price(&self, amount: U256) -> U256 {
+        let numerator = (self.reserve0 / amount) / 1000;
+        let denominator = (self.reserve1 - amount) / 997;
+        numerator / denominator + 1
+    }
 }
 
 #[cfg(test)]

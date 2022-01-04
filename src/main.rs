@@ -3,29 +3,24 @@ use std::sync::Arc;
 use ethers::{
     abi::Address,
     middleware::SignerMiddleware,
-    prelude::{Middleware, H160},
+    prelude::Middleware,
     providers::{Http, Provider},
     signers::LocalWallet,
 };
 
 use dotenv::dotenv;
 use forge_test::{
-    addresses::*,
-    // bindings::i_uniswap_v2_factory::IUniswapV2Factory,
-    bindings::flash_bots_uniswap_query::FlashBotsUniswapQuery,
-    crossed_pair::CrossedPairManager,
-    dex_factory::get_markets_by_token,
+    addresses::*, bindings::flash_bots_uniswap_query::FlashBotsUniswapQuery,
+    crossed_pair::CrossedPairManager, dex_factory::get_markets_by_token,
 };
 use futures::{future, StreamExt};
 
 #[tokio::main]
 async fn main() {
-    println!("hello");
     dotenv().ok();
 
     let pk = dotenv::var("PRIVATE_KEY").unwrap();
     let wallet: LocalWallet = pk.parse().expect("fail parse");
-    // println!("{}", pk);
     let provider_id = dotenv::var("PROVIDER_ID").unwrap();
     let url = format!("https://mainnet.infura.io/v3/{}", provider_id);
 
@@ -57,7 +52,8 @@ async fn main() {
 
     let fut = provider_service.watch_blocks();
     let mut stream = fut.await.unwrap().take_while(|_| future::ready(true));
-    while let Some(block) = stream.next().await {
+    while let Some(_block) = stream.next().await {
         crossed_pair.update_reserve().await;
+        crossed_pair.find_arbitrage_opportunities();
     }
 }
