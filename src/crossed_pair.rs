@@ -1,8 +1,4 @@
-use std::{cell::RefCell, sync::Arc};
-
-use crate::bindings::{
-    flash_bots_uniswap_query::FlashBotsUniswapQuery, i_uniswap_v2_pair::IUniswapV2Pair,
-};
+use crate::bindings::flash_bots_uniswap_query::FlashBotsUniswapQuery;
 use ethers::prelude::*;
 
 #[derive(Debug)]
@@ -12,7 +8,7 @@ where
 {
     // contract: IUniswapV2Pair<M>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
-    pairs: Vec<TokenMarket<'a>>,
+    markets: Vec<TokenMarket<'a>>,
 }
 
 impl<'a, M> CrossedPairManager<'a, M>
@@ -35,7 +31,7 @@ where
             })
             .collect::<Vec<TokenMarket>>();
         Self {
-            pairs,
+            markets: pairs,
             flash_query_contract,
         }
     }
@@ -56,12 +52,14 @@ where
             .await
             .unwrap();
 
+        &self.markets.into_iter().flatten();
+
         dbg!(reserves);
         ()
     }
 
     fn flatten(&self) -> Vec<Pair> {
-        self.pairs
+        self.markets
             .iter()
             .flat_map(|token_market| token_market.pairs.to_vec())
             .collect::<Vec<Pair>>()
@@ -74,9 +72,41 @@ pub struct TokenMarket<'a> {
     pairs: Vec<Pair>,
 }
 
-impl<'a> TokenMarket<'a> {}
+impl<'a> IntoIterator for TokenMarket<'a> {
+    type Item = &'a Pair;
+    type IntoIter = TokenMarketIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TokenMarketIterator {
+            market: self,
+            outer: Some(&self.pairs[0]),
+            inner: 0,
+        }
+    }
+}
+
+struct TokenMarketIterator<'a> {
+    market: TokenMarket<'a>,
+    outer: Option<&'a Pair>,
+    inner: usize,
+}
+
+impl<'a> Iterator for TokenMarketIterator<'a> {
+    type Item = &'a Pair;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = self.market.pairs.get(self.inner);
+        result
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Pair {
     address: H160,
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn is_flatten() {}
 }
