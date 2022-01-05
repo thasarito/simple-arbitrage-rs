@@ -57,6 +57,8 @@ where
                 reserve0: new_reserve[0],
                 reserve1: new_reserve[1],
                 block_timestamp_last: new_reserve[2],
+                buy_price: None,
+                sell_price: None,
             };
 
             pair.reserve = Some(updated_reserve);
@@ -70,8 +72,8 @@ where
             .collect::<Vec<&mut Pair>>()
     }
 
-    pub fn find_arbitrage_opportunities(&self) {
-        for market in &self.markets {
+    pub fn find_arbitrage_opportunities(&mut self) {
+        for market in &mut self.markets {
             market.find_arbitrage_opportunity();
         }
         ()
@@ -85,20 +87,22 @@ pub struct TokenMarket<'a> {
 }
 
 impl<'a> TokenMarket<'a> {
-    pub fn find_arbitrage_opportunity(&self) {
+    pub fn find_arbitrage_opportunity(&mut self) {
         dbg!(self.token);
         println!("------------------------------------------------------------------------------------------");
-        for pair in &self.pairs {
-            let reserve = pair.reserve.as_ref().unwrap();
+        for pair in &mut self.pairs {
+            let reserve = pair.reserve.as_mut().unwrap();
 
             let ether: U256 = U256::from_dec_str("1000000000000000000").unwrap();
 
-            let buy_price = reserve.token_out_for_ether(ether);
+            let buy_price = reserve.token_out_from_ether(ether);
+            reserve.buy_price = Some(buy_price);
 
             let sell_price = reserve.token_in_for_ether(ether);
+            reserve.sell_price = Some(sell_price);
+            let timestamp = pair.reserve.as_ref().unwrap().block_timestamp_last;
             dbg!(buy_price);
             dbg!(sell_price);
-            let timestamp = pair.reserve.as_ref().unwrap().block_timestamp_last;
             dbg!(timestamp);
             println!("------------------------------------------------------------------------------------------")
         }
@@ -118,10 +122,12 @@ pub struct Reserve {
     reserve0: U256,
     reserve1: U256,
     block_timestamp_last: U256,
+    buy_price: Option<U256>,
+    sell_price: Option<U256>,
 }
 
 impl Reserve {
-    pub fn token_out_for_ether(&self, amount: U256) -> U256 {
+    pub fn token_out_from_ether(&self, amount: U256) -> U256 {
         let amount = amount / 1000 * 997;
         let numerator = self.reserve0 * amount;
         let denominator = self.reserve1 + amount;
