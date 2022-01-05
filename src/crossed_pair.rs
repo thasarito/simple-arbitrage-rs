@@ -89,12 +89,15 @@ impl<'a> TokenMarket<'a> {
         dbg!(self.token);
         println!("------------------------------------------------------------------------------------------");
         for pair in &self.pairs {
-            let price = pair
-                .reserve
-                .as_ref()
-                .unwrap()
-                .get_updated_price(U256::from_dec_str("1000000000000000000").unwrap());
-            dbg!(price);
+            let reserve = pair.reserve.as_ref().unwrap();
+
+            let ether: U256 = U256::from_dec_str("1000000000000000000").unwrap();
+
+            let buy_price = reserve.token_out_for_ether(ether);
+
+            let sell_price = reserve.token_in_for_ether(ether);
+            dbg!(buy_price);
+            dbg!(sell_price);
             let timestamp = pair.reserve.as_ref().unwrap().block_timestamp_last;
             dbg!(timestamp);
             println!("------------------------------------------------------------------------------------------")
@@ -118,10 +121,19 @@ pub struct Reserve {
 }
 
 impl Reserve {
-    pub fn get_updated_price(&self, amount: U256) -> U256 {
+    pub fn token_out_for_ether(&self, amount: U256) -> U256 {
         let amount = amount / 1000 * 997;
         let numerator = self.reserve0 * amount;
         let denominator = self.reserve1 + amount;
+        numerator / denominator
+    }
+
+    pub fn token_in_for_ether(&self, amount: U256) -> U256 {
+        let numerator = self.reserve0 * amount;
+        if self.reserve1 < amount {
+            return self.reserve0;
+        }
+        let denominator = (self.reserve1 - amount) * 997 / 1000;
         numerator / denominator
     }
 }
