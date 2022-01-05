@@ -86,15 +86,21 @@ pub struct TokenMarket<'a> {
 
 impl<'a> TokenMarket<'a> {
     pub fn find_arbitrage_opportunity(&self) {
+        dbg!(self.token);
+        println!("------------------------------------------------------------------------------------------");
         for pair in &self.pairs {
             let price = pair
                 .reserve
                 .as_ref()
                 .unwrap()
-                .get_updated_price(U256::from_dec_str("100").unwrap());
-            dbg!(pair.address);
+                .get_updated_price(U256::from_dec_str("1000000000000000000").unwrap());
             dbg!(price);
+            let timestamp = pair.reserve.as_ref().unwrap().block_timestamp_last;
+            dbg!(timestamp);
+            println!("------------------------------------------------------------------------------------------")
         }
+        println!("------------------------------------------------------------------------------------------");
+        println!("");
     }
 }
 
@@ -113,9 +119,10 @@ pub struct Reserve {
 
 impl Reserve {
     pub fn get_updated_price(&self, amount: U256) -> U256 {
-        let numerator = (self.reserve0 / amount) / 1000;
-        let denominator = (self.reserve1 - amount) / 997;
-        numerator / denominator + 1
+        let amount = amount / 1000 * 997;
+        let numerator = self.reserve0 * amount;
+        let denominator = self.reserve1 + amount;
+        numerator / denominator
     }
 }
 
