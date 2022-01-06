@@ -15,7 +15,7 @@ where
     M: Middleware,
 {
     pub fn new(
-        grouped_pairs: &'a Vec<(H160, Vec<H160>)>,
+        grouped_pairs: &'a Vec<(H160, Vec<[H160; 3]>)>,
         flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     ) -> Self {
         let pairs = grouped_pairs
@@ -25,8 +25,10 @@ where
                 pairs: pairs
                     .to_vec()
                     .into_iter()
-                    .map(|address| Pair {
+                    .map(|[token0, token1, address]| Pair {
                         address,
+                        token0,
+                        token1,
                         reserve: None,
                     })
                     .collect::<Vec<Pair>>(),
@@ -123,6 +125,8 @@ impl<'a> TokenMarket<'a> {
 #[derive(Debug)]
 pub struct Pair {
     address: H160,
+    token0: H160,
+    token1: H160,
     reserve: Option<Reserve>,
 }
 

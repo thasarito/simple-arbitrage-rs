@@ -13,7 +13,7 @@ pub async fn get_markets_by_token<'a, M>(
     factory_addresses: Vec<Address>,
     flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     client: Arc<M>,
-) -> Vec<(H160, Vec<H160>)>
+) -> Vec<(H160, Vec<[H160; 3]>)>
 where
     M: Middleware,
 {
@@ -39,7 +39,7 @@ where
         }
     }
 
-    let grouped_pairs: Vec<(H160, Vec<H160>)> = pairs
+    let grouped_pairs: Vec<(H160, Vec<[H160; 3]>)> = pairs
         .into_iter()
         .filter(|pair| {
             // println!("pair[0]: {}", pair[0]);
@@ -68,13 +68,11 @@ where
         })
         .into_iter()
         .map(|(key, group)| {
-            let pairs = group
-                .map(|[_, _, pair_address]| pair_address)
-                .collect::<Vec<H160>>();
+            let pairs = group.map(|group| group).collect::<Vec<[H160; 3]>>();
             (key, pairs)
         })
         .filter(|(_, pairs)| pairs.len() > (1 as usize))
-        .collect::<Vec<(H160, Vec<H160>)>>();
+        .collect::<Vec<(H160, Vec<[H160; 3]>)>>();
 
     grouped_pairs
 }
