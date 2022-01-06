@@ -74,6 +74,7 @@ where
 
     pub fn find_arbitrage_opportunities(&mut self) {
         for market in &mut self.markets {
+            market.update_reserve_price();
             market.find_arbitrage_opportunity();
         }
         ()
@@ -87,9 +88,7 @@ pub struct TokenMarket<'a> {
 }
 
 impl<'a> TokenMarket<'a> {
-    pub fn find_arbitrage_opportunity(&mut self) {
-        dbg!(self.token);
-        println!("------------------------------------------------------------------------------------------");
+    pub fn update_reserve_price(&mut self) {
         for pair in &mut self.pairs {
             let reserve = pair.reserve.as_mut().unwrap();
 
@@ -100,11 +99,21 @@ impl<'a> TokenMarket<'a> {
 
             let sell_price = reserve.token_in_for_ether(ether);
             reserve.sell_price = Some(sell_price);
-            let timestamp = pair.reserve.as_ref().unwrap().block_timestamp_last;
-            dbg!(buy_price);
-            dbg!(sell_price);
-            dbg!(timestamp);
-            println!("------------------------------------------------------------------------------------------")
+        }
+    }
+
+    pub fn find_arbitrage_opportunity(&self) {
+        dbg!(self.token);
+        println!("------------------------------------------------------------------------------------------");
+        for pair_a in &self.pairs {
+            let sell_price = pair_a.reserve.as_ref().unwrap().sell_price;
+            for pair_b in &self.pairs {
+                let buy_price = pair_b.reserve.as_ref().unwrap().buy_price;
+                if sell_price > buy_price {
+                    dbg!(pair_a, pair_b);
+                    println!("------------------------------------------------------------------------------------------");
+                }
+            }
         }
         println!("------------------------------------------------------------------------------------------");
         println!("");

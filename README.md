@@ -9,3 +9,11 @@
 
 - [foundry](https://github.com/gakonst/foundry)
 - [ethers.rs](https://github.com/gakonst/ethers-rs)
+
+## Arbitrage Logic
+
+1. Find TKN/ETH pairs that exist in several Dexes.
+
+2. Update those pairs reserve using `getReserve` from `UniswapFlashQuery.sol`
+
+3. store reserve in `Reserve` struct `WETH` should always be `reserve1`
