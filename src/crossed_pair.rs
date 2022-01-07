@@ -105,20 +105,23 @@ impl<'a> TokenMarket<'a> {
     }
 
     pub fn find_arbitrage_opportunity(&self) {
-        dbg!(self.token);
-        println!("------------------------------------------------------------------------------------------");
         for pair_a in &self.pairs {
-            let sell_price = pair_a.reserve.as_ref().unwrap().sell_price;
+            // let sell_price = pair_a.reserve.as_ref().unwrap().sell_price;
             for pair_b in &self.pairs {
-                let buy_price = pair_b.reserve.as_ref().unwrap().buy_price;
-                if sell_price > buy_price {
-                    dbg!(pair_a, pair_b);
+                let profit = pair_a
+                    .reserve
+                    .as_ref()
+                    .unwrap()
+                    .profit(pair_b.reserve.as_ref().unwrap());
+                // let buy_price = pair_b.reserve.as_ref().unwrap().buy_price;
+                if profit.gt(&U256::from(10u128.pow(15))) {
+                    dbg!(self.token);
+                    // dbg!(pair_a, pair_b);
+                    dbg!(profit);
                     println!("------------------------------------------------------------------------------------------");
                 }
             }
         }
-        println!("------------------------------------------------------------------------------------------");
-        println!("");
     }
 }
 
@@ -148,12 +151,26 @@ impl Reserve {
     }
 
     pub fn token_in_for_ether(&self, amount: U256) -> U256 {
+        let amount = amount * 997 / 1000;
         let numerator = self.reserve0 * amount;
         if self.reserve1 < amount {
             return self.reserve0;
         }
         let denominator = (self.reserve1 - amount) * 997 / 1000;
         numerator / denominator
+    }
+
+    pub fn profit(&self, pair_b: &Self) -> U256 {
+        // Uniswap return U112
+        let divider = U256::from(10u128.pow(5));
+        let divider_2 = U256::from(10u128.pow(10));
+        let q = (self.reserve0 * pair_b.reserve1 / divider_2).as_u128() as f32;
+        let r = (pair_b.reserve0 * self.reserve1 / divider_2).as_u128() as f32;
+        let s = (self.reserve0 + pair_b.reserve0 / divider).as_u128() as f32;
+        let x_opt = (r.powf(2.0f32) - ((r.powf(2.0f32) - q * r) / s)).powf(0.5f32) - r;
+        let p = ((q * x_opt) / (r + s * x_opt) - x_opt) as u128 * 10u128.pow(5);
+
+        U256::from(p)
     }
 }
 

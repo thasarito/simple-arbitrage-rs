@@ -17,3 +17,5 @@
 2. Update those pairs reserve using `getReserve` from `UniswapFlashQuery.sol`
 
 3. store reserve in `Reserve` struct `WETH` should always be `reserve1`
+
+4. calculated `buy_price` and `sell_price`

@@ -53,6 +53,8 @@ async fn main() {
     let fut = provider_service.watch_blocks();
     let mut stream = fut.await.unwrap().take_while(|_| future::ready(true));
     while let Some(_block) = stream.next().await {
+        let block_number = provider_service.get_block_number().await.unwrap();
+        dbg!(block_number);
         crossed_pair.update_reserve().await;
         crossed_pair.find_arbitrage_opportunities();
     }
