@@ -59,8 +59,6 @@ where
                 reserve0: new_reserve[0],
                 reserve1: new_reserve[1],
                 block_timestamp_last: new_reserve[2],
-                buy_price: None,
-                sell_price: None,
             };
 
             pair.reserve = Some(updated_reserve);
@@ -93,30 +91,20 @@ impl<'a> TokenMarket<'a> {
     pub fn update_reserve_price(&mut self) {
         for pair in &mut self.pairs {
             let reserve = pair.reserve.as_mut().unwrap();
-
-            let ether: U256 = U256::from_dec_str("1000000000000000000").unwrap();
-
-            let buy_price = reserve.token_out_from_ether(ether);
-            reserve.buy_price = Some(buy_price);
-
-            let sell_price = reserve.token_in_for_ether(ether);
-            reserve.sell_price = Some(sell_price);
         }
     }
 
     pub fn find_arbitrage_opportunity(&self) {
         for pair_a in &self.pairs {
-            // let sell_price = pair_a.reserve.as_ref().unwrap().sell_price;
             for pair_b in &self.pairs {
                 let profit = pair_a
                     .reserve
                     .as_ref()
                     .unwrap()
                     .profit(pair_b.reserve.as_ref().unwrap());
-                // let buy_price = pair_b.reserve.as_ref().unwrap().buy_price;
+
                 if profit.gt(&U256::from(10u128.pow(15))) {
                     dbg!(self.token);
-                    // dbg!(pair_a, pair_b);
                     dbg!(profit);
                     println!("------------------------------------------------------------------------------------------");
                 }
@@ -138,28 +126,9 @@ pub struct Reserve {
     reserve0: U256,
     reserve1: U256,
     block_timestamp_last: U256,
-    buy_price: Option<U256>,
-    sell_price: Option<U256>,
 }
 
 impl Reserve {
-    pub fn token_out_from_ether(&self, amount: U256) -> U256 {
-        let amount = amount / 1000 * 997;
-        let numerator = self.reserve0 * amount;
-        let denominator = self.reserve1 + amount;
-        numerator / denominator
-    }
-
-    pub fn token_in_for_ether(&self, amount: U256) -> U256 {
-        let amount = amount * 997 / 1000;
-        let numerator = self.reserve0 * amount;
-        if self.reserve1 < amount {
-            return self.reserve0;
-        }
-        let denominator = (self.reserve1 - amount) * 997 / 1000;
-        numerator / denominator
-    }
-
     pub fn profit(&self, pair_b: &Self) -> U256 {
         // Uniswap return U112
         let divider = U256::from(10u128.pow(5));
@@ -177,5 +146,5 @@ impl Reserve {
 #[cfg(test)]
 mod test {
     #[test]
-    fn is_flatten() {}
+    fn found_arbitrage() {}
 }
