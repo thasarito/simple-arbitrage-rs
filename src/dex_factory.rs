@@ -29,7 +29,6 @@ where
         let market_pairs = factory
             .get_markets()
             .await
-            .unwrap()
             .into_iter()
             .map(|pair| pair)
             .collect::<Vec<[H160; 3]>>();
@@ -104,15 +103,36 @@ where
         }
     }
 
-    pub async fn get_markets(&self) -> Result<Vec<[H160; 3]>, ContractError<M>> {
-        let start = U256::from_dec_str("0").unwrap();
-        let stop = U256::from_dec_str("1000").unwrap();
+    pub async fn get_markets(&self) -> Vec<[H160; 3]> {
+        let batch_size = U256::from(1000u32);
+        let mut start = U256::from(0u32);
 
-        let pairs = self
-            .flash_query_contract
-            .get_pairs_by_index_range(self.factory_contract.address(), start, stop)
-            .call()
-            .await;
-        pairs
+        let batch_limit = 10;
+        let mut count = 0;
+        let mut markets: Vec<[H160; 3]> = vec![];
+        loop {
+            let stop = start + batch_size;
+
+            let pairs = self
+                .flash_query_contract
+                .get_pairs_by_index_range(self.factory_contract.address(), start, stop)
+                .call()
+                .await
+                .unwrap();
+
+            count = count + 1;
+            start = stop;
+
+            let pair_length = pairs.len();
+
+            markets.extend(pairs);
+
+            if pair_length < batch_size.as_usize() || count > batch_limit {
+                dbg!(markets.len());
+                break;
+            }
+        }
+
+        markets
     }
 }
