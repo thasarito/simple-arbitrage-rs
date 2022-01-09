@@ -1,4 +1,4 @@
-use crate::bindings::flash_bots_uniswap_query::FlashBotsUniswapQuery;
+use crate::{addresses::WETH_ADDRESS, bindings::flash_bots_uniswap_query::FlashBotsUniswapQuery};
 use ethers::{abi::ethereum_types::U512, prelude::*};
 
 #[derive(Debug)]
@@ -55,9 +55,15 @@ where
             .unwrap();
 
         for (new_reserve, pair) in std::iter::zip(&reserves, self.get_all_pair_addresses()) {
+            let weth_address = &WETH_ADDRESS.parse::<Address>().unwrap();
+            let (reserve0, reserve1) = if &pair.token0 == weth_address {
+                (new_reserve[1], new_reserve[0])
+            } else {
+                (new_reserve[0], new_reserve[1])
+            };
             let updated_reserve = Reserve {
-                reserve0: new_reserve[0],
-                reserve1: new_reserve[1],
+                reserve0,
+                reserve1,
                 // block_timestamp_last: new_reserve[2],
             };
 
@@ -97,7 +103,10 @@ impl<'a> TokenMarket<'a> {
 
                 if profit.gt(&U512::from(10u128.pow(15))) {
                     dbg!(self.token);
+                    dbg!(pair_a.address, pair_b.address);
                     dbg!(profit);
+                    let profit_usd = (profit.as_u128() as f64) / 10f64.powf(18f64) * 4000f64;
+                    dbg!(profit_usd);
                     println!("------------------------------------------------------------------------------------------");
                 }
             }
@@ -120,10 +129,7 @@ pub struct Reserve {
 }
 
 pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> U512 {
-    // dbg!(pair_a, pair_b);
     // Uniswap return U112
-    // let divider = U256::from(10u128.pow(1));
-    // let divider_2 = U256::from(10u128.pow(1));
     let q = U512::from(pair_a.reserve0 * pair_b.reserve1);
     let r = U512::from(pair_b.reserve0 * pair_a.reserve1);
     let s = U512::from(pair_a.reserve0 + pair_b.reserve0);
@@ -132,17 +138,13 @@ pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> U512 {
     }
 
     let r2 = r.checked_pow(U512::from(2i32)).expect("power overflow");
-    // dbg!(q, r, r2, s);
     let x_opt = (r2 + ((q * r - r2) / s)).integer_sqrt() - r;
-    // dbg!(x_opt);
     if x_opt == U512::from(0u128) {
         return U512::from(0u128);
     }
     let p = (q * x_opt) / (r + s * x_opt) - x_opt;
-    // dbg!(p);
 
     p
-    // U512::from(p)
 }
 
 #[cfg(test)]
