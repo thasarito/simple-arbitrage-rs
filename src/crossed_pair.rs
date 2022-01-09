@@ -1,5 +1,5 @@
 use crate::bindings::flash_bots_uniswap_query::FlashBotsUniswapQuery;
-use ethers::prelude::*;
+use ethers::{abi::ethereum_types::U512, prelude::*};
 
 #[derive(Debug)]
 pub struct CrossedPairManager<'a, M>
@@ -58,7 +58,7 @@ where
             let updated_reserve = Reserve {
                 reserve0: new_reserve[0],
                 reserve1: new_reserve[1],
-                block_timestamp_last: new_reserve[2],
+                // block_timestamp_last: new_reserve[2],
             };
 
             pair.reserve = Some(updated_reserve);
@@ -74,7 +74,6 @@ where
 
     pub fn find_arbitrage_opportunities(&mut self) {
         for market in &mut self.markets {
-            market.update_reserve_price();
             market.find_arbitrage_opportunity();
         }
         ()
@@ -88,22 +87,15 @@ pub struct TokenMarket<'a> {
 }
 
 impl<'a> TokenMarket<'a> {
-    pub fn update_reserve_price(&mut self) {
-        for pair in &mut self.pairs {
-            let reserve = pair.reserve.as_mut().unwrap();
-        }
-    }
-
     pub fn find_arbitrage_opportunity(&self) {
         for pair_a in &self.pairs {
             for pair_b in &self.pairs {
-                let profit = pair_a
-                    .reserve
-                    .as_ref()
-                    .unwrap()
-                    .profit(pair_b.reserve.as_ref().unwrap());
+                let profit = profit(
+                    pair_a.reserve.as_ref().unwrap(),
+                    pair_b.reserve.as_ref().unwrap(),
+                );
 
-                if profit.gt(&U256::from(10u128.pow(15))) {
+                if profit.gt(&U512::from(10u128.pow(15))) {
                     dbg!(self.token);
                     dbg!(profit);
                     println!("------------------------------------------------------------------------------------------");
@@ -125,26 +117,52 @@ pub struct Pair {
 pub struct Reserve {
     reserve0: U256,
     reserve1: U256,
-    block_timestamp_last: U256,
 }
 
-impl Reserve {
-    pub fn profit(&self, pair_b: &Self) -> U256 {
-        // Uniswap return U112
-        let divider = U256::from(10u128.pow(5));
-        let divider_2 = U256::from(10u128.pow(10));
-        let q = (self.reserve0 * pair_b.reserve1 / divider_2).as_u128() as f32;
-        let r = (pair_b.reserve0 * self.reserve1 / divider_2).as_u128() as f32;
-        let s = (self.reserve0 + pair_b.reserve0 / divider).as_u128() as f32;
-        let x_opt = (r.powf(2.0f32) - ((r.powf(2.0f32) - q * r) / s)).powf(0.5f32) - r;
-        let p = ((q * x_opt) / (r + s * x_opt) - x_opt) as u128 * 10u128.pow(5);
-
-        U256::from(p)
+pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> U512 {
+    // dbg!(pair_a, pair_b);
+    // Uniswap return U112
+    // let divider = U256::from(10u128.pow(1));
+    // let divider_2 = U256::from(10u128.pow(1));
+    let q = U512::from(pair_a.reserve0 * pair_b.reserve1);
+    let r = U512::from(pair_b.reserve0 * pair_a.reserve1);
+    let s = U512::from(pair_a.reserve0 + pair_b.reserve0);
+    if r > q {
+        return U512::from(0u128);
     }
+
+    let r2 = r.checked_pow(U512::from(2i32)).expect("power overflow");
+    // dbg!(q, r, r2, s);
+    let x_opt = (r2 + ((q * r - r2) / s)).integer_sqrt() - r;
+    // dbg!(x_opt);
+    if x_opt == U512::from(0u128) {
+        return U512::from(0u128);
+    }
+    let p = (q * x_opt) / (r + s * x_opt) - x_opt;
+    // dbg!(p);
+
+    p
+    // U512::from(p)
 }
 
 #[cfg(test)]
 mod test {
+    use super::*;
+    use ethers::prelude::U256;
+
     #[test]
-    fn found_arbitrage() {}
+    fn found_arbitrage() {
+        let uniswap_reserve = Reserve {
+            reserve0: U256::from_dec_str("26736768576059172").unwrap(),
+            reserve1: U256::from_dec_str("9561078446416170138885").unwrap(),
+        };
+
+        let sushi_reserve = Reserve {
+            reserve0: U256::from_dec_str("27402034049012068275").unwrap(),
+            reserve1: U256::from_dec_str("8581483325062417688092897").unwrap(),
+        };
+
+        let profit = profit(&uniswap_reserve, &sushi_reserve);
+        dbg!(profit);
+    }
 }
