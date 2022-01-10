@@ -150,7 +150,6 @@ pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> U512 {
 #[cfg(test)]
 mod test {
     use super::*;
-    use ethers::prelude::U256;
 
     #[test]
     fn found_arbitrage() {

@@ -9,4 +9,6 @@ pub mod ierc20;
 pub mod ierc20_metadata;
 pub mod test_wrapper;
 pub mod uniswap_v2_factory;
+pub mod uniswap_v2_pair;
+pub mod uniswap_v2_router;
 pub mod wrapper;
