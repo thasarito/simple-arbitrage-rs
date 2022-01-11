@@ -6,7 +6,10 @@ mod simulation_test {
     use std::sync::Arc;
 
     use super::*;
-    use ethers::{prelude::H160, utils::Ganache};
+    use ethers::{
+        prelude::{artifacts::CompactContract, Artifact, ContractFactory, H160},
+        utils::Ganache,
+    };
     use forge_test::bindings::{
         uniswap_v2_factory::UniswapV2Factory, uniswap_v2_router::UniswapV2Router,
     };
@@ -29,17 +32,22 @@ mod simulation_test {
 
         let client1 = connect(&ganache, 0);
 
-        let factory = compile_contract("UniswapV2Factory", "UniswapV2Factory.sol");
-        let router = compile_contract("UniswapV2Router", "UniswapV2Router.sol");
-        // let factoryAddrs = factory
-        //     .deploy(H160::zero())
-        //     .unwrap()
-        //     .legacy()
-        //     .send()
-        //     .await
-        //     .unwrap()
-        //     .address();
+        let compactFactory: CompactContract = serde_json::from_str(include_str!(
+            "../out/UniswapV2Factory.sol/UniswapV2Factory.json"
+        ))
+        .unwrap();
+        let (abi, bytes, _) = compactFactory.into_parts_or_default();
+        let factoryFactory = ContractFactory::new(abi, bytes, client1.clone());
 
-        // dbg!(factoryAddrs);
+        let factoryAddrs = factoryFactory
+            .deploy(H160::zero())
+            .unwrap()
+            .legacy()
+            .send()
+            .await
+            .unwrap()
+            .address();
+
+        dbg!(factoryAddrs);
     }
 }
