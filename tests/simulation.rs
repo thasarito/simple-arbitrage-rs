@@ -6,8 +6,10 @@ mod simulation_test {
     use std::sync::Arc;
 
     use super::*;
-    use ethers::utils::Ganache;
-    use forge_test::bindings::uniswap_v2_router::UniswapV2Router;
+    use ethers::{prelude::H160, utils::Ganache};
+    use forge_test::bindings::{
+        uniswap_v2_factory::UniswapV2Factory, uniswap_v2_router::UniswapV2Router,
+    };
 
     #[tokio::test]
     async fn test_arbitrage() {
@@ -22,12 +24,22 @@ mod simulation_test {
         let ganache = Ganache::new().spawn();
 
         let addrs = ganache.addresses().to_vec();
-        let addr1 = addrs[0];
+        let deployer = addrs[0];
         let addr2 = addrs[1];
 
         let client1 = connect(&ganache, 0);
-        let client2 = connect(&ganache, 1);
-        let router = UniswapV2Router::new(addr1, Arc::clone(&client1));
-        dbg!(router);
+
+        let factory = compile_contract("UniswapV2Factory", "UniswapV2Factory.sol");
+        let router = compile_contract("UniswapV2Router", "UniswapV2Router.sol");
+        // let factoryAddrs = factory
+        //     .deploy(H160::zero())
+        //     .unwrap()
+        //     .legacy()
+        //     .send()
+        //     .await
+        //     .unwrap()
+        //     .address();
+
+        // dbg!(factoryAddrs);
     }
 }
