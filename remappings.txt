@@ -1,2 +1,2 @@
-@openzeppelin/=node_modules/@openzeppelin/contracts/
+@openzeppelin/=node_modules/@openzeppelin/
 ds-test/=lib/ds-test/src/

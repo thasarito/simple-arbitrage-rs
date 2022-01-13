@@ -6,7 +6,6 @@ use ethers::prelude::artifacts::CompactContract;
 use ethers::prelude::*;
 use ethers::utils::GanacheInstance;
 
-use ethers::core::{abi::Abi, types::Bytes};
 use ethers::providers::Http;
 
 // connects the private key to http://localhost:8545

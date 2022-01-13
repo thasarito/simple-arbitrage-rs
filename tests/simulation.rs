@@ -11,19 +11,11 @@ mod simulation_test {
         utils::Ganache,
     };
     use forge_test::bindings::{
-        uniswap_v2_factory::UniswapV2Factory, uniswap_v2_router::UniswapV2Router,
+        erc20::ERC20, uniswap_v2_factory::UniswapV2Factory, uniswap_v2_router::UniswapV2Router,
     };
 
     #[tokio::test]
     async fn test_arbitrage() {
-        // uniswap_v2_factory;
-        // uniswapv2factory::
-
-        // let (client, _mock) = Provider::mocked();
-        // let contract = StakedOHM::new(Address::default(), Arc::new(client));
-
-        // let _ = contract.index();
-        // let _ = contract.INDEX();
         let ganache = Ganache::new().arg("--allowUnlimitedContractSize").spawn();
 
         let addrs = ganache.addresses().to_vec();
@@ -86,9 +78,19 @@ mod simulation_test {
 
         let block = provider.get_block_number().await.unwrap();
         let time = provider.get_block(block).await.unwrap().unwrap().timestamp;
+
+        let searcher_token = ERC20::new(token.address(), searcher.clone());
         let token_balance_1 = U256::from_dec_str("26736768576059172").unwrap();
         let eth_balance_1 = U256::from_dec_str("9561078446416170138885").unwrap();
+
+        searcher_token
+            .approve(router.address(), token_balance_1)
+            .call()
+            .await
+            .unwrap();
+
         let searcher_router = UniswapV2Router::new(router.address(), searcher.clone());
+
         searcher_router
             .add_liquidity_eth(
                 token.address(),
