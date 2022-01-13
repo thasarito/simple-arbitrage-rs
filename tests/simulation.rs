@@ -28,8 +28,8 @@ mod simulation_test {
         let token = token.deploy(()).unwrap().legacy().send().await.unwrap();
         // Finish deploy token
 
-        let token_balance_1 = U256::from_dec_str("26736768576059").unwrap();
-        let eth_balance_1 = U256::from_dec_str("9561078446416170138").unwrap();
+        let token_balance_1 = U256::from_dec_str("32417025234557782261").unwrap();
+        let eth_balance_1 = U256::from_dec_str("322112290808754715658").unwrap();
 
         create_pool(
             token.address(),
@@ -40,8 +40,8 @@ mod simulation_test {
         )
         .await;
 
-        let token_balance_2 = U256::from_dec_str("27402034049012").unwrap();
-        let eth_balance_2 = U256::from_dec_str("8581483325062417688").unwrap();
+        let token_balance_2 = U256::from_dec_str("385013293957127603432").unwrap();
+        let eth_balance_2 = U256::from_dec_str("3864221907791931816675").unwrap();
         create_pool(
             token.address(),
             weth.address(),

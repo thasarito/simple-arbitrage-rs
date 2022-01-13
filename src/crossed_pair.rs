@@ -104,6 +104,10 @@ impl<'a> TokenMarket<'a> {
                 if profit.gt(&U512::from(10u128.pow(15))) {
                     dbg!(self.token, x);
                     dbg!(pair_a.address, pair_b.address);
+                    dbg!(
+                        pair_a.reserve.as_ref().unwrap(),
+                        pair_b.reserve.as_ref().unwrap()
+                    );
                     dbg!(profit);
                     let profit_usd = (profit.as_u128() as f64) / 10f64.powf(18f64) * 4000f64;
                     dbg!(profit_usd);
@@ -154,13 +158,13 @@ mod test {
     #[test]
     fn found_arbitrage() {
         let uniswap_reserve = Reserve {
-            reserve0: U256::from_dec_str("26736768576059172").unwrap(),
-            reserve1: U256::from_dec_str("9561078446416170138885").unwrap(),
+            reserve0: U256::from_dec_str("32417025234557782261").unwrap(),
+            reserve1: U256::from_dec_str("322112290808754715658").unwrap(),
         };
 
         let sushi_reserve = Reserve {
-            reserve0: U256::from_dec_str("27402034049012068275").unwrap(),
-            reserve1: U256::from_dec_str("8581483325062417688092897").unwrap(),
+            reserve0: U256::from_dec_str("385013293957127603432").unwrap(),
+            reserve1: U256::from_dec_str("3864221907791931816675").unwrap(),
         };
 
         let (x, profit) = profit(&uniswap_reserve, &sushi_reserve);
