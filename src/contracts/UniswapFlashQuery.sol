@@ -3,12 +3,8 @@ pragma solidity 0.6.12;
 
 pragma experimental ABIEncoderV2;
 import "./interfaces/IUniswapV2Pair.sol";
+import "./interfaces/IUniswapV2Factory.sol";
 
-abstract contract UniswapV2Factory  {
-    mapping(address => mapping(address => address)) public getPair;
-    address[] public allPairs;
-    function allPairsLength() external view virtual returns (uint);
-}
 
 // In order to quickly load up data from Uniswap-like market, this contract allows easy iteration with a single eth_call
 contract FlashBotsUniswapQuery {
@@ -20,13 +16,14 @@ contract FlashBotsUniswapQuery {
         return result;
     }
 
-    function getPairsByIndexRange(UniswapV2Factory _uniswapFactory, uint256 _start, uint256 _stop) external view returns (address[3][] memory)  {
+    function getPairsByIndexRange(IUniswapV2Factory _uniswapFactory, uint256 _start, uint256 _stop) external view returns (address[3][] memory)  {
+        uint stop = _stop;
         uint256 _allPairsLength = _uniswapFactory.allPairsLength();
-        if (_stop > _allPairsLength) {
-            _stop = _allPairsLength;
+        if (stop > _allPairsLength) {
+            stop = _allPairsLength;
         }
-        require(_stop >= _start, "start cannot be higher than stop");
-        uint256 _qty = _stop - _start;
+        require(stop >= _start, "start cannot be higher than stop");
+        uint256 _qty = stop - _start;
         address[3][] memory result = new address[3][](_qty);
         for (uint i = 0; i < _qty; i++) {
             IUniswapV2Pair _uniswapPair = IUniswapV2Pair(_uniswapFactory.allPairs(_start + i));
