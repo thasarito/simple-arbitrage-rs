@@ -164,7 +164,7 @@ mod test {
 
         let sushi_reserve = Reserve {
             reserve0: U256::from_dec_str("385013293957127603432").unwrap(),
-            reserve1: U256::from_dec_str("3864221907791931816675").unwrap(),
+            reserve1: U256::from_dec_str("4864221907791931816675").unwrap(),
         };
 
         let (x, profit) = profit(&uniswap_reserve, &sushi_reserve);

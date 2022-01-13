@@ -78,13 +78,6 @@ pub async fn create_pool<T>(
         .await
         .unwrap();
 
-    let allowance = searcher_token
-        .allowance(deployer, router.address())
-        .call()
-        .await
-        .unwrap();
-    dbg!(allowance);
-
     let searcher_router = UniswapV2Router02::new(router.address(), client.clone());
     searcher_router
         .add_liquidity_eth(
