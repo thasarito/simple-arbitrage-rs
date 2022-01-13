@@ -14,9 +14,6 @@ mod simulation_test {
     async fn test_arbitrage() {
         let ganache = Ganache::new().arg("--allowUnlimitedContractSize").spawn();
 
-        let addrs = ganache.addresses().to_vec();
-        let deployer = addrs[0];
-
         let provider = connect(&ganache, 0);
         // let searcher = connect(&ganache, 1);
         // Start deploy token
