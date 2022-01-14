@@ -96,22 +96,22 @@ impl<'a> TokenMarket<'a> {
     pub fn find_arbitrage_opportunity(&self) {
         for pair_a in &self.pairs {
             for pair_b in &self.pairs {
-                let (x, profit) = profit(
+                if let Some((x, alt_amount, profit)) = profit(
                     pair_a.reserve.as_ref().unwrap(),
                     pair_b.reserve.as_ref().unwrap(),
-                );
-
-                if profit.gt(&U512::from(10u128.pow(15))) {
-                    dbg!(self.token, x);
-                    dbg!(pair_a.address, pair_b.address);
-                    dbg!(
-                        pair_a.reserve.as_ref().unwrap(),
-                        pair_b.reserve.as_ref().unwrap()
-                    );
-                    dbg!(profit);
-                    let profit_usd = (profit.as_u128() as f64) / 10f64.powf(18f64) * 4000f64;
-                    dbg!(profit_usd);
-                    println!("------------------------------------------------------------------------------------------");
+                ) {
+                    if profit.gt(&U512::from(10u128.pow(15))) {
+                        dbg!(self.token, x);
+                        dbg!(pair_a.address, pair_b.address);
+                        dbg!(
+                            pair_a.reserve.as_ref().unwrap(),
+                            pair_b.reserve.as_ref().unwrap()
+                        );
+                        dbg!(profit);
+                        let profit_usd = (profit.as_u128() as f64) / 10f64.powf(18f64) * 4000f64;
+                        dbg!(profit_usd);
+                        println!("------------------------------------------------------------------------------------------");
+                    }
                 }
             }
         }
@@ -132,23 +132,24 @@ pub struct Reserve {
     reserve1: U256,
 }
 
-pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> (U512, U512) {
+pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> Option<(U512, U512, U512)> {
     // Uniswap return U112
     let q = U512::from(pair_a.reserve0 * pair_b.reserve1);
     let r = U512::from(pair_b.reserve0 * pair_a.reserve1);
     let s = U512::from(pair_a.reserve0 + pair_b.reserve0);
     if r > q {
-        return (U512::zero(), U512::zero());
+        return None;
     }
 
     let r2 = r.checked_pow(U512::from(2i32)).expect("power overflow");
     let x_opt = (r2 + ((q * r - r2) / s)).integer_sqrt() - r;
     if x_opt == U512::from(0u128) {
-        return (U512::zero(), U512::zero());
+        return None;
     }
+    let alt_amount = U512::from(pair_a.reserve1) * x_opt / (U512::from(pair_a.reserve0) + x_opt);
     let p = (q * x_opt) / (r + s * x_opt) - x_opt;
 
-    (x_opt, p)
+    Some((x_opt, alt_amount, p))
 }
 
 #[cfg(test)]
@@ -167,7 +168,7 @@ mod test {
             reserve1: U256::from_dec_str("4864221907791931816675").unwrap(),
         };
 
-        let (x, profit) = profit(&uniswap_reserve, &sushi_reserve);
-        dbg!(x, profit);
+        let (x, alt, profit) = profit(&uniswap_reserve, &sushi_reserve).unwrap();
+        dbg!(x, alt, profit);
     }
 }
