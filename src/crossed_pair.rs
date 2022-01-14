@@ -132,6 +132,12 @@ pub struct Reserve {
     reserve1: U256,
 }
 
+impl Reserve {
+    pub fn new(reserve0: U256, reserve1: U256) -> Self {
+        Self { reserve0, reserve1 }
+    }
+}
+
 pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> Option<(U512, U512, U512)> {
     // Uniswap return U112
     let q = U512::from(pair_a.reserve0 * pair_b.reserve1);
