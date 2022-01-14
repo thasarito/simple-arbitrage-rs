@@ -40,7 +40,7 @@ pub async fn create_pool<T>(
     amount_token: U256,
     amount_eth: U256,
     client: Arc<Provider<T>>,
-) -> H160
+) -> (H160, H160, H160)
 where
     T: JsonRpcClient,
 {
@@ -97,5 +97,5 @@ where
 
     let factory_contract = UniswapV2Factory::new(factory.address(), client.clone());
     let pool_address = factory_contract.get_pair(token, weth).call().await.unwrap();
-    pool_address
+    (factory.address(), router.address(), pool_address)
 }
