@@ -18,7 +18,7 @@ mod iweth9_mod {
     use std::sync::Arc;
     pub static IWETH9_ABI: ethers::contract::Lazy<ethers::core::abi::Abi> =
         ethers::contract::Lazy::new(|| {
-            serde_json :: from_str ("[{\"type\":\"function\",\"name\":\"deposit\",\"inputs\":[],\"outputs\":[],\"constant\":false,\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"withdraw\",\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"wad\",\"type\":\"uint256\"}],\"outputs\":[],\"constant\":false,\"stateMutability\":\"nonpayable\"}]") . expect ("invalid abi")
+            serde_json :: from_str ("[{\"type\":\"function\",\"name\":\"deposit\",\"inputs\":[],\"outputs\":[],\"constant\":false,\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"transfer\",\"inputs\":[{\"internalType\":\"address\",\"name\":\"dst\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"wad\",\"type\":\"uint256\"}],\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"constant\":false,\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"withdraw\",\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"wad\",\"type\":\"uint256\"}],\"outputs\":[],\"constant\":false,\"stateMutability\":\"nonpayable\"}]") . expect ("invalid abi")
         });
     #[derive(Clone)]
     pub struct IWETH9<M>(ethers::contract::Contract<M>);
@@ -53,6 +53,16 @@ mod iweth9_mod {
                 .method_hash([208, 227, 13, 176], ())
                 .expect("method not found (this should never happen)")
         }
+        #[doc = "Calls the contract's `transfer` (0xa9059cbb) function"]
+        pub fn transfer(
+            &self,
+            dst: ethers::core::types::Address,
+            wad: ethers::core::types::U256,
+        ) -> ethers::contract::builders::ContractCall<M, bool> {
+            self.0
+                .method_hash([169, 5, 156, 187], (dst, wad))
+                .expect("method not found (this should never happen)")
+        }
         #[doc = "Calls the contract's `withdraw` (0x2e1a7d4d) function"]
         pub fn withdraw(
             &self,
@@ -75,6 +85,21 @@ mod iweth9_mod {
     )]
     #[ethcall(name = "deposit", abi = "deposit()")]
     pub struct DepositCall;
+    #[doc = "Container type for all input parameters for the `transfer`function with signature `transfer(address,uint256)` and selector `[169, 5, 156, 187]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+    )]
+    #[ethcall(name = "transfer", abi = "transfer(address,uint256)")]
+    pub struct TransferCall {
+        pub dst: ethers::core::types::Address,
+        pub wad: ethers::core::types::U256,
+    }
     #[doc = "Container type for all input parameters for the `withdraw`function with signature `withdraw(uint256)` and selector `[46, 26, 125, 77]`"]
     #[derive(
         Clone,
@@ -92,6 +117,7 @@ mod iweth9_mod {
     #[derive(Debug, Clone, PartialEq, Eq, ethers :: contract :: EthAbiType)]
     pub enum IWETH9Calls {
         Deposit(DepositCall),
+        Transfer(TransferCall),
         Withdraw(WithdrawCall),
     }
     impl ethers::core::abi::AbiDecode for IWETH9Calls {
@@ -100,6 +126,11 @@ mod iweth9_mod {
                 <DepositCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
             {
                 return Ok(IWETH9Calls::Deposit(decoded));
+            }
+            if let Ok(decoded) =
+                <TransferCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(IWETH9Calls::Transfer(decoded));
             }
             if let Ok(decoded) =
                 <WithdrawCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
@@ -113,6 +144,7 @@ mod iweth9_mod {
         fn encode(self) -> Vec<u8> {
             match self {
                 IWETH9Calls::Deposit(element) => element.encode(),
+                IWETH9Calls::Transfer(element) => element.encode(),
                 IWETH9Calls::Withdraw(element) => element.encode(),
             }
         }
@@ -121,6 +153,7 @@ mod iweth9_mod {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
                 IWETH9Calls::Deposit(element) => element.fmt(f),
+                IWETH9Calls::Transfer(element) => element.fmt(f),
                 IWETH9Calls::Withdraw(element) => element.fmt(f),
             }
         }
@@ -128,6 +161,11 @@ mod iweth9_mod {
     impl ::std::convert::From<DepositCall> for IWETH9Calls {
         fn from(var: DepositCall) -> Self {
             IWETH9Calls::Deposit(var)
+        }
+    }
+    impl ::std::convert::From<TransferCall> for IWETH9Calls {
+        fn from(var: TransferCall) -> Self {
+            IWETH9Calls::Transfer(var)
         }
     }
     impl ::std::convert::From<WithdrawCall> for IWETH9Calls {

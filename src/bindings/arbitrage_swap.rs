@@ -18,7 +18,7 @@ mod arbitrageswap_mod {
     use std::sync::Arc;
     pub static ARBITRAGESWAP_ABI: ethers::contract::Lazy<ethers::core::abi::Abi> =
         ethers::contract::Lazy::new(|| {
-            serde_json :: from_str ("[{\"type\":\"constructor\",\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_weth\",\"type\":\"address\"}]},{\"type\":\"function\",\"name\":\"swap\",\"inputs\":[{\"internalType\":\"contract IUniswapV2Pair\",\"name\":\"pool_a\",\"type\":\"address\"},{\"internalType\":\"contract IUniswapV2Pair\",\"name\":\"pool_b\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"intermediate_amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"profit\",\"type\":\"uint256\"}],\"outputs\":[],\"constant\":false,\"stateMutability\":\"payable\"}]") . expect ("invalid abi")
+            serde_json :: from_str ("[{\"type\":\"constructor\",\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_weth\",\"type\":\"address\"}]},{\"type\":\"function\",\"name\":\"swap\",\"inputs\":[{\"internalType\":\"contract IUniswapV2Pair\",\"name\":\"pool_a\",\"type\":\"address\"},{\"internalType\":\"contract IUniswapV2Pair\",\"name\":\"pool_b\",\"type\":\"address\"},{\"internalType\":\"contract IERC20\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"intermediate_amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"profit\",\"type\":\"uint256\"}],\"outputs\":[],\"constant\":false,\"stateMutability\":\"payable\"}]") . expect ("invalid abi")
         });
     #[derive(Clone)]
     pub struct ArbitrageSwap<M>(ethers::contract::Contract<M>);
@@ -47,23 +47,24 @@ mod arbitrageswap_mod {
                 ethers::contract::Contract::new(address.into(), ARBITRAGESWAP_ABI.clone(), client);
             Self(contract)
         }
-        #[doc = "Calls the contract's `swap` (0xfe029156) function"]
+        #[doc = "Calls the contract's `swap` (0xe343fe12) function"]
         pub fn swap(
             &self,
             pool_a: ethers::core::types::Address,
             pool_b: ethers::core::types::Address,
+            token: ethers::core::types::Address,
             intermediate_amount: ethers::core::types::U256,
             profit: ethers::core::types::U256,
         ) -> ethers::contract::builders::ContractCall<M, ()> {
             self.0
                 .method_hash(
-                    [254, 2, 145, 86],
-                    (pool_a, pool_b, intermediate_amount, profit),
+                    [227, 67, 254, 18],
+                    (pool_a, pool_b, token, intermediate_amount, profit),
                 )
                 .expect("method not found (this should never happen)")
         }
     }
-    #[doc = "Container type for all input parameters for the `swap`function with signature `swap(address,address,uint256,uint256)` and selector `[254, 2, 145, 86]`"]
+    #[doc = "Container type for all input parameters for the `swap`function with signature `swap(address,address,address,uint256,uint256)` and selector `[227, 67, 254, 18]`"]
     #[derive(
         Clone,
         Debug,
@@ -73,10 +74,11 @@ mod arbitrageswap_mod {
         ethers :: contract :: EthCall,
         ethers :: contract :: EthDisplay,
     )]
-    #[ethcall(name = "swap", abi = "swap(address,address,uint256,uint256)")]
+    #[ethcall(name = "swap", abi = "swap(address,address,address,uint256,uint256)")]
     pub struct SwapCall {
         pub pool_a: ethers::core::types::Address,
         pub pool_b: ethers::core::types::Address,
+        pub token: ethers::core::types::Address,
         pub intermediate_amount: ethers::core::types::U256,
         pub profit: ethers::core::types::U256,
     }

@@ -4,15 +4,13 @@ pub use common::*;
 #[cfg(test)]
 mod simulation_test {
 
-    use std::ops::Div;
-
     use super::*;
     use ethers::{
-        prelude::{artifacts::CompactContract, Middleware, Signer, U256},
+        prelude::{artifacts::CompactContract, Middleware, U256},
         utils::Ganache,
     };
     use forge_test::{
-        bindings::{arbitrage_swap::ArbitrageSwap, uniswap_v2_router_02::UniswapV2Router02},
+        bindings::arbitrage_swap::ArbitrageSwap,
         crossed_pair::{profit, Reserve},
     };
 
@@ -37,7 +35,7 @@ mod simulation_test {
                 .unwrap();
         let arb = deploy(compact_arb, provider.clone()).await;
         let arb = arb
-            .deploy((weth.address()))
+            .deploy(weth.address())
             .unwrap()
             .legacy()
             .send()
@@ -76,8 +74,8 @@ mod simulation_test {
         let pair_a = Reserve::new(token_balance_1, eth_balance_1);
         let pair_b = Reserve::new(token_balance_2, eth_balance_2);
         let (x, intm, prof) = profit(&pair_a, &pair_b).unwrap();
-        let intm = intm * 997u32 / 1000u32;
-        let prof = prof * 997u32 / 1000u32;
+        let intm = intm * 990u32 / 1000u32;
+        let prof = prof * 990u32 / 1000u32;
         dbg!(x, intm, prof, pool_a, pool_b);
 
         // let router_a = UniswapV2Router02::new(router_a, searcher.clone());
@@ -92,6 +90,7 @@ mod simulation_test {
         arb.swap(
             pool_a,
             pool_b,
+            token.address(),
             U256::try_from(intm).unwrap(),
             U256::try_from(prof).unwrap(),
         )

@@ -28,7 +28,7 @@ pub async fn deploy<T>(
 where
     T: JsonRpcClient,
 {
-    let (abi, bytes, b2) = compact_contract.into_parts_or_default();
+    let (abi, bytes, _) = compact_contract.into_parts_or_default();
     let factory = ContractFactory::new(abi, bytes, client);
 
     factory
