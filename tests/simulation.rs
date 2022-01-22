@@ -70,6 +70,7 @@ mod simulation_test {
             provider.clone(),
         )
         .await;
+        dbg!(pool_a, pool_b);
 
         let pair_a = Reserve::new(token_balance_1, eth_balance_1);
         let pair_b = Reserve::new(token_balance_2, eth_balance_2);
@@ -88,6 +89,7 @@ mod simulation_test {
             .await
             .unwrap();
         dbg!(initial_balance);
+
         let arb = ArbitrageSwap::new(arb.address(), searcher.clone());
         arb.swap(
             pool_a,
