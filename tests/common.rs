@@ -8,8 +8,14 @@ use ethers::utils::GanacheInstance;
 
 use ethers::providers::Http;
 use forge_test::bindings::t_token::TToken;
-use forge_test::bindings::uniswap_v2_factory::UniswapV2Factory;
 use forge_test::bindings::uniswap_v2_router_02::UniswapV2Router02;
+
+abigen!(
+    UniV2Factory,
+    r#"[
+        function getPair(address tokenA, address tokenB) external view returns (address)
+    ]"#
+);
 
 // connects the private key to http://localhost:8545
 pub fn connect(ganache: &GanacheInstance, idx: usize) -> Arc<Provider<Http>> {
@@ -99,7 +105,12 @@ where
         .await
         .unwrap();
 
-    let factory_contract = UniswapV2Factory::new(factory.address(), client.clone());
-    let pool_address = factory_contract.get_pair(token, weth).call().await.unwrap();
+    let factory_contract = UniV2Factory::new(factory.address(), client.clone());
+    let pool_address = factory_contract
+        .get_pair(token, weth)
+        .call()
+        .await
+        .unwrap_or(H160::zero());
+
     (factory.address(), router.address(), pool_address)
 }
