@@ -10,7 +10,7 @@ mod simulation_test {
         utils::Ganache,
     };
     use forge_test::{
-        bindings::arbitrage_swap::ArbitrageSwap,
+        bindings::{arbitrage_swap::ArbitrageSwap, weth9::WETH9},
         crossed_pair::{profit, Reserve},
     };
 
@@ -74,8 +74,8 @@ mod simulation_test {
         let pair_a = Reserve::new(token_balance_1, eth_balance_1);
         let pair_b = Reserve::new(token_balance_2, eth_balance_2);
         let (x, intm, prof) = profit(&pair_a, &pair_b).unwrap();
-        let intm = intm * 990u32 / 1000u32;
-        let prof = prof * 990u32 / 1000u32;
+        let intm = intm * 997u32 / 1000u32;
+        let prof = prof * 997u32 / 1000u32;
         dbg!(x, intm, prof, pair_a, pair_b);
 
         // let router_a = UniswapV2Router02::new(router_a, searcher.clone());
@@ -101,5 +101,13 @@ mod simulation_test {
         .send()
         .await
         .unwrap();
+
+        let weth_call = WETH9::new(weth.address(), searcher.clone());
+        let after_balance = weth_call
+            .balance_of(searcher.default_sender().unwrap())
+            .call()
+            .await
+            .unwrap();
+        dbg!(after_balance);
     }
 }

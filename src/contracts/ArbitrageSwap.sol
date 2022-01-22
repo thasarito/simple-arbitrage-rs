@@ -17,16 +17,17 @@ contract ArbitrageSwap {
 	}
 
 	function swap(IUniswapV2Pair pool_a, IUniswapV2Pair pool_b, IERC20 token, uint intermediate_amount, uint profit) public payable {
-		profit;
 		weth.deposit{value: msg.value}();
 		(uint amount0, uint amount1) = pool_a.token0() == address(token) ? (intermediate_amount, uint(0)) : (uint(0), intermediate_amount);
 		weth.transfer(address(pool_a), msg.value);
-		pool_a.swap(amount0, amount1, msg.sender, "");
+		pool_a.swap(amount0, amount1, address(pool_b), "");
 
-		// (uint amount_token_b, uint amount_eth_b) = pool_b.token0() == address(token) ? (amount_token, profit) : (profit, amount_token);
-		// token.transfer(address(pool_b), amount_token_b);
-		// pool_b.swap(0, amount_eth_b * 990 / 1000, address(msg.sender), "");
+		(uint amount0b, uint amount1b) = pool_b.token0() == address(token) ? (uint(0), profit) : (profit, uint(0));
+		pool_b.swap(amount0b, amount1b, address(this), "");
+		weth.transfer(msg.sender, profit);
 		// weth.withdraw(profit);
 		// payable(msg.sender).transfer(profit);
 	}
+
+	receive() external payable {}
 }
