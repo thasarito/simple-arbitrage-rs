@@ -152,7 +152,7 @@ pub fn profit(pair_a: &Reserve, pair_b: &Reserve) -> Option<(U512, U512, U512)> 
     if x_opt == U512::from(0u128) {
         return None;
     }
-    let alt_amount = U512::from(pair_a.reserve1) * x_opt / (U512::from(pair_a.reserve0) + x_opt);
+    let alt_amount = U512::from(pair_a.reserve0) * x_opt / (U512::from(pair_a.reserve1) + x_opt);
     let p = (q * x_opt) / (r + s * x_opt) - x_opt;
 
     Some((x_opt, alt_amount, p))

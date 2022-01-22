@@ -17,10 +17,11 @@ contract ArbitrageSwap {
 	}
 
 	function swap(IUniswapV2Pair pool_a, IUniswapV2Pair pool_b, IERC20 token, uint intermediate_amount, uint profit) public payable {
-		(uint amount_token, uint amount_eth) = pool_a.token0() == address(token) ? (intermediate_amount, msg.value) : (msg.value, intermediate_amount);
-		weth.deposit{value: amount_eth}();
-		weth.transfer(address(pool_a), amount_eth);
-		pool_a.swap(amount_token, 0, address(pool_b), "");
+		profit;
+		weth.deposit{value: msg.value}();
+		(uint amount0, uint amount1) = pool_a.token0() == address(token) ? (intermediate_amount, uint(0)) : (uint(0), intermediate_amount);
+		weth.transfer(address(pool_a), msg.value);
+		pool_a.swap(amount0, amount1, msg.sender, "");
 
 		// (uint amount_token_b, uint amount_eth_b) = pool_b.token0() == address(token) ? (amount_token, profit) : (profit, amount_token);
 		// token.transfer(address(pool_b), amount_token_b);

@@ -76,11 +76,13 @@ mod simulation_test {
         let (x, intm, prof) = profit(&pair_a, &pair_b).unwrap();
         let intm = intm * 990u32 / 1000u32;
         let prof = prof * 990u32 / 1000u32;
-        dbg!(x, intm, prof, pool_a, pool_b);
+        dbg!(x, intm, prof, pair_a, pair_b);
 
         // let router_a = UniswapV2Router02::new(router_a, searcher.clone());
         // let router_b = UniswapV2Router02::new(router_b, searcher.clone());
         // let block = searcher.get_block_number().await.unwrap();
+
+        // Insufficient liquidity vs revert
         let initial_balance = searcher
             .get_balance(searcher.default_sender().unwrap(), None)
             .await
