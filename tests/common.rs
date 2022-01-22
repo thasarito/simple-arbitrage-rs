@@ -45,8 +45,10 @@ where
     T: JsonRpcClient,
 {
     let deployer = client.default_sender().unwrap();
-    let compact_factory: CompactContract =
-        serde_json::from_str(include_str!("../out/UniswapV2Factory.json")).unwrap();
+    let compact_factory: CompactContract = serde_json::from_str(include_str!(
+        "../node_modules/@uniswap/v2-core/build/UniswapV2Factory.json"
+    ))
+    .unwrap();
     let factory = deploy(compact_factory, client.clone()).await;
     let factory = factory
         .deploy(H160::zero())
@@ -56,8 +58,10 @@ where
         .await
         .unwrap();
 
-    let compact_router: CompactContract =
-        serde_json::from_str(include_str!("../out/UniswapV2Router02.json")).unwrap();
+    let compact_router: CompactContract = serde_json::from_str(include_str!(
+        "../node_modules/@uniswap/v2-periphery/build/UniswapV2Router02.json"
+    ))
+    .unwrap();
     let router = deploy(compact_router, client.clone()).await;
     let router = router
         .deploy((factory.address(), weth))
