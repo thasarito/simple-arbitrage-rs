@@ -111,7 +111,5 @@ mod simulation_test {
             .await
             .unwrap();
         dbg!(after_balance);
-
-        drop(ganache);
     }
 }
