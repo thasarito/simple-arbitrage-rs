@@ -1,5 +1,5 @@
 // use ethers_solc::{Project, ProjectPathsConfig};
-use ethers::contract::{MultiAbigen};
+use ethers::contract::MultiAbigen;
 
 fn main() {
     // configure the project with all its paths, solc, cache etc.

@@ -2,9 +2,9 @@
 pragma solidity 0.6.12;
 
 pragma experimental ABIEncoderV2;
-import "./interfaces/IUniswapV2Pair.sol";
-import "./interfaces/IUniswapV2Factory.sol";
 
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 
 // In order to quickly load up data from Uniswap-like market, this contract allows easy iteration with a single eth_call
 contract FlashBotsUniswapQuery {

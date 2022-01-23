@@ -9,15 +9,15 @@ use crate::{
 };
 use ethers::prelude::*;
 
-pub async fn get_markets_by_token<'a, M>(
+pub async fn get_markets_by_token<M>(
     factory_addresses: Vec<Address>,
-    flash_query_contract: &'a FlashBotsUniswapQuery<M>,
+    flash_query_contract: &FlashBotsUniswapQuery<M>,
     client: Arc<M>,
 ) -> Vec<(H160, Vec<[H160; 3]>)>
 where
     M: Middleware,
 {
-    let factories: Vec<DexFactory<'a, M>> = factory_addresses
+    let factories: Vec<DexFactory<M>> = factory_addresses
         .into_iter()
         .map(|address| DexFactory::new(address, flash_query_contract, client.clone()))
         .collect();
@@ -30,7 +30,6 @@ where
             .get_markets()
             .await
             .into_iter()
-            .map(|pair| pair)
             .collect::<Vec<[H160; 3]>>();
 
         for pair in market_pairs {
@@ -42,8 +41,7 @@ where
         .into_iter()
         .filter(|pair| {
             // println!("pair[0]: {}", pair[0]);
-            let is_include_weth = pair[0].eq(weth_address) || pair[1].eq(weth_address);
-            is_include_weth
+            pair[0].eq(weth_address) || pair[1].eq(weth_address)
         })
         .sorted_by(|pair0, pair1| {
             let non_weth0 = if pair0[0].eq(weth_address) {
@@ -67,10 +65,10 @@ where
         })
         .into_iter()
         .map(|(key, group)| {
-            let pairs = group.map(|group| group).collect::<Vec<[H160; 3]>>();
+            let pairs = group.collect::<Vec<[H160; 3]>>();
             (key, pairs)
         })
-        .filter(|(_, pairs)| pairs.len() > (1 as usize))
+        .filter(|(_, pairs)| pairs.len() > (1_usize))
         .collect::<Vec<(H160, Vec<[H160; 3]>)>>();
 
     grouped_pairs
@@ -96,7 +94,7 @@ where
         // let flash_query_address = flash_query_address
         //     .parse::<Address>()
         //     .expect("Invalid Address");
-        let contract = IUniswapV2Factory::new(pair_address, client.clone());
+        let contract = IUniswapV2Factory::new(pair_address, client);
         Self {
             factory_contract: contract,
             flash_query_contract,
@@ -120,7 +118,7 @@ where
                 .await
                 .unwrap();
 
-            count = count + 1;
+            count += 1;
             start = stop;
 
             let pair_length = pairs.len();
