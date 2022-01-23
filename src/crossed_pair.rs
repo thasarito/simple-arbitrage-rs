@@ -15,16 +15,16 @@ where
     M: Middleware,
 {
     pub fn new(
-        grouped_pairs: &'a Vec<(H160, Vec<[H160; 3]>)>,
+        grouped_pairs: &'a [(H160, Vec<[H160; 3]>)],
         flash_query_contract: &'a FlashBotsUniswapQuery<M>,
     ) -> Self {
         let pairs = grouped_pairs
-            .into_iter()
+            .iter()
             .map(|(token, pairs)| TokenMarket {
                 token,
                 pairs: pairs
-                    .to_vec()
-                    .into_iter()
+                    .iter()
+                    .copied()
                     .map(|[token0, token1, address]| Pair {
                         address,
                         token0,
@@ -82,7 +82,6 @@ where
         for market in &mut self.markets {
             market.find_arbitrage_opportunity();
         }
-        ()
     }
 }
 
@@ -96,7 +95,7 @@ impl<'a> TokenMarket<'a> {
     pub fn find_arbitrage_opportunity(&self) {
         for pair_a in &self.pairs {
             for pair_b in &self.pairs {
-                if let Some((x, alt_amount, profit)) = profit(
+                if let Some((x, _alt_amount, profit)) = profit(
                     pair_a.reserve.as_ref().unwrap(),
                     pair_b.reserve.as_ref().unwrap(),
                 ) {
@@ -119,6 +118,7 @@ impl<'a> TokenMarket<'a> {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Pair {
     address: H160,
     token0: H160,

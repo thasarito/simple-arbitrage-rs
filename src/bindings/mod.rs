@@ -9,7 +9,4 @@ pub mod ierc20;
 pub mod ierc20_metadata;
 pub mod iweth9;
 pub mod t_token;
-pub mod uniswap_v2_factory;
-pub mod uniswap_v2_pair;
-pub mod uniswap_v2_router_02;
 pub mod weth9;
