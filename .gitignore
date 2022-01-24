@@ -1,4 +1,5 @@
 /target
 /cache
-/out
 node_modules/
+/out/*
+!/out/Uniswap*.json
